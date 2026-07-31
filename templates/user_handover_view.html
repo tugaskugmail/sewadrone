@@ -138,6 +138,21 @@
                     {{ photo_gallery_view(handover.photo_out_urls, 'Foto Kondisi Drone Saat Keluar') }}
                 </div>
             </div>
+            {% elif handover.photo_out_url %}
+            <div class="card bg-secondary mb-4">
+                <div class="card-header">📷 Foto Dokumentasi Serah Terima</div>
+                <div class="card-body">
+                    <div class="d-flex gap-2 flex-wrap">
+                        {% for url in handover.photo_out_url.split(',') %}
+                        <a href="{{ url.strip() }}" target="_blank">
+                            <img src="{{ url.strip() }}" alt="Foto kondisi drone"
+                                 style="width:90px;height:90px;object-fit:cover;border-radius:8px;border:2px solid #198754;"
+                                 onerror="this.parentElement.style.display='none'">
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
             {% else %}
             <div class="mb-4">
                 <span class="badge bg-secondary">📷 Foto Saat Keluar: {{ 'Terlampir' if handover.photo_out_attached else 'Tidak Ada' }}</span>
