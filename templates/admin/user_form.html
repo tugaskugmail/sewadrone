@@ -104,7 +104,7 @@
                             {% endif %}
                             
                             {% if not user %}
-                            <!-- Signature Pad (hanya saat tambah user baru) -->
+                            <!-- Signature Pad (tambah user baru) -->
                             <div class="col-12 mt-3">
                                 <label class="form-label fw-semibold">✍️ Tanda Tangan</label>
                                 <div class="border rounded p-2" style="background:#1a1a2e; max-width:400px;">
@@ -116,6 +116,33 @@
                                             <i class="bi bi-eraser me-1"></i>Hapus
                                         </button>
                                         <small class="text-muted my-auto">Tanda tangan di atas kotak putih</small>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="signature" id="signatureData">
+                            </div>
+                            {% else %}
+                            <!-- Signature Pad (edit user — bisa update signature) -->
+                            <div class="col-12 mt-3">
+                                <label class="form-label fw-semibold">✍️ Tanda Tangan</label>
+                                {% if user.signature %}
+                                <div class="mb-2 p-2 border rounded text-center" style="background:#fff; max-width:400px;">
+                                    <small class="text-muted d-block mb-1">Tanda tangan tersimpan:</small>
+                                    <img src="{{ user.signature }}" alt="Tanda tangan" style="max-height:80px; max-width:100%;">
+                                </div>
+                                {% else %}
+                                <div class="alert alert-warning small py-2 mb-2" style="max-width:400px;">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>Belum ada tanda tangan tersimpan.
+                                </div>
+                                {% endif %}
+                                <div class="border rounded p-2" style="background:#1a1a2e; max-width:400px;">
+                                    <canvas id="signaturePad"
+                                            width="370" height="150"
+                                            style="background:#fff; border-radius:4px; display:block; cursor:crosshair; touch-action:none;"></canvas>
+                                    <div class="mt-2 d-flex gap-2">
+                                        <button type="button" class="btn btn-sm btn-outline-danger" id="clearSignature">
+                                            <i class="bi bi-eraser me-1"></i>Hapus
+                                        </button>
+                                        <small class="text-muted my-auto">Gambar baru untuk ganti yang lama</small>
                                     </div>
                                 </div>
                                 <input type="hidden" name="signature" id="signatureData">
@@ -137,21 +164,18 @@
     </div>
 </div>
 
-{% if not user %}
+
 <script>
 (function() {
     const canvas = document.getElementById('signaturePad');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    let drawing = false;
-    let lastX = 0, lastY = 0;
-
+    let drawing = false, lastX = 0, lastY = 0;
     function getPos(e) {
         const rect = canvas.getBoundingClientRect();
         const src = e.touches ? e.touches[0] : e;
         return [src.clientX - rect.left, src.clientY - rect.top];
     }
-
     function startDraw(e) { e.preventDefault(); drawing = true; [lastX, lastY] = getPos(e); }
     function endDraw() { drawing = false; saveData(); }
     function draw(e) {
@@ -169,23 +193,19 @@
         [lastX, lastY] = [x, y];
         saveData();
     }
-
     function saveData() {
         document.getElementById('signatureData').value = canvas.toDataURL('image/png');
     }
-
     canvas.addEventListener('mousedown', startDraw);
     canvas.addEventListener('mouseup', endDraw);
     canvas.addEventListener('mousemove', draw);
     canvas.addEventListener('touchstart', startDraw, { passive: false });
     canvas.addEventListener('touchend', endDraw);
     canvas.addEventListener('touchmove', draw, { passive: false });
-
     document.getElementById('clearSignature').addEventListener('click', function() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         document.getElementById('signatureData').value = '';
     });
 })();
 </script>
-{% endif %}
 {% endblock %}

@@ -875,6 +875,11 @@ def user_edit(user_id):
         new_password = request.form.get('new_password')
         if new_password and len(new_password) >= 6:
             user.password = generate_password_hash(new_password)
+
+        # Update signature kalau ada yang baru digambar
+        new_sig = request.form.get('signature', '').strip()
+        if new_sig and new_sig.startswith('data:image'):
+            user.signature = new_sig
         
         db.session.commit()
         flash(f'User "{user.full_name}" berhasil diperbarui!', 'success')
