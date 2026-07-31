@@ -234,9 +234,9 @@
                     </div>
                 </div>
 
-                <!-- Tanda Tangan -->
+                <!-- Persetujuan & Tanda Tangan (dari database) -->
                 <div class="card bg-secondary mb-4">
-                    <div class="card-header">✍️ Tanda Tangan</div>
+                    <div class="card-header">✅ Persetujuan & Tanda Tangan</div>
                     <div class="card-body">
                         <div class="row mb-3">
                             <div class="col-md-4">
@@ -247,29 +247,48 @@
                         </div>
                         <div class="row g-4">
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">Tanda Tangan Admin</label>
-                                <div class="border rounded p-2" style="background:#1a1a2e;">
-                                    <canvas id="adminSignaturePad" width="320" height="130"
-                                            style="background:#fff; border-radius:4px; display:block; cursor:crosshair; touch-action:none;"></canvas>
-                                    <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="clearAdminSig">
-                                        <i class="bi bi-eraser me-1"></i>Hapus
-                                    </button>
+                                <div class="form-check form-check-inline mb-2">
+                                    <input class="form-check-input" type="checkbox" id="adminApprove"
+                                           name="admin_approve" value="1" checked>
+                                    <label class="form-check-label fw-semibold" for="adminApprove">
+                                        Saya (Admin) menyetujui isi BAST ini
+                                    </label>
                                 </div>
-                                <input type="hidden" name="admin_signature" id="adminSigData"
-                                       value="{{ handover.admin_signature if handover and handover.admin_signature else '' }}">
+                                <div class="border rounded p-3 text-center" style="background:#fff; min-height:130px;" id="adminSigBox">
+                                    {% if current_user.signature %}
+                                    <img src="{{ current_user.signature }}" alt="Tanda tangan admin"
+                                         style="max-height:70px; max-width:100%;">
+                                    {% else %}
+                                    <span class="text-muted fst-italic">Belum ada tanda tangan tersimpan</span>
+                                    {% endif %}
+                                    <div class="fw-bold mt-2" style="color:#1a1a2e;">{{ current_user.full_name }}</div>
+                                    <div class="small text-muted">(Admin)</div>
+                                </div>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">Tanda Tangan Penyewa</label>
-                                <div class="border rounded p-2" style="background:#1a1a2e;">
-                                    <canvas id="userSignaturePad" width="320" height="130"
-                                            style="background:#fff; border-radius:4px; display:block; cursor:crosshair; touch-action:none;"></canvas>
-                                    <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="clearUserSig">
-                                        <i class="bi bi-eraser me-1"></i>Hapus
-                                    </button>
+                                <div class="form-check form-check-inline mb-2">
+                                    <input class="form-check-input" type="checkbox" id="userApprove"
+                                           name="user_approve" value="1" checked>
+                                    <label class="form-check-label fw-semibold" for="userApprove">
+                                        Penyewa menyetujui isi BAST ini
+                                    </label>
                                 </div>
-                                <input type="hidden" name="user_signature" id="userSigData"
-                                       value="{{ handover.user_signature if handover and handover.user_signature else '' }}">
+                                <div class="border rounded p-3 text-center" style="background:#fff; min-height:130px;" id="userSigBox">
+                                    {% if booking.user.signature %}
+                                    <img src="{{ booking.user.signature }}" alt="Tanda tangan penyewa"
+                                         style="max-height:70px; max-width:100%;">
+                                    {% else %}
+                                    <span class="text-muted fst-italic">Belum ada tanda tangan tersimpan</span>
+                                    {% endif %}
+                                    <div class="fw-bold mt-2" style="color:#1a1a2e;">{{ booking.user.full_name }}</div>
+                                    <div class="small text-muted">(Penyewa)</div>
+                                </div>
                             </div>
+                        </div>
+                        <div class="alert alert-info mt-3 mb-0 small">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Tanda tangan diambil otomatis dari data yang tersimpan saat registrasi.
+                            Centang kotak persetujuan untuk menggunakan tanda tangan tersebut.
                         </div>
                     </div>
                 </div>
@@ -297,53 +316,19 @@ document.getElementById('bastDate').value = new Date().toLocaleDateString('id-ID
     day: '2-digit', month: 'long', year: 'numeric'
 });
 
-// Signature pad factory
-function makeSignaturePad(canvasId, hiddenId, clearBtnId, existingData) {
-    const canvas = document.getElementById(canvasId);
-    const hidden = document.getElementById(hiddenId);
-    const ctx = canvas.getContext('2d');
-    let drawing = false, lastX = 0, lastY = 0;
+// Checkbox persetujuan: tampilkan/sembunyikan kotak tanda tangan
+const adminApprove = document.getElementById('adminApprove');
+const userApprove = document.getElementById('userApprove');
+const adminSigBox = document.getElementById('adminSigBox');
+const userSigBox = document.getElementById('userSigBox');
 
-    // Restore existing signature if present
-    if (existingData) {
-        const img = new Image();
-        img.onload = () => ctx.drawImage(img, 0, 0);
-        img.src = existingData;
-    }
-
-    function getPos(e) {
-        const rect = canvas.getBoundingClientRect();
-        const src = e.touches ? e.touches[0] : e;
-        return [src.clientX - rect.left, src.clientY - rect.top];
-    }
-    function startDraw(e) { e.preventDefault(); drawing = true; [lastX, lastY] = getPos(e); }
-    function endDraw() { drawing = false; hidden.value = canvas.toDataURL('image/png'); }
-    function draw(e) {
-        if (!drawing) return;
-        e.preventDefault();
-        const [x, y] = getPos(e);
-        ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(x, y);
-        ctx.strokeStyle = '#1a1a2e'; ctx.lineWidth = 2;
-        ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
-        [lastX, lastY] = [x, y];
-        hidden.value = canvas.toDataURL('image/png');
-    }
-    canvas.addEventListener('mousedown', startDraw);
-    canvas.addEventListener('mouseup', endDraw);
-    canvas.addEventListener('mousemove', draw);
-    canvas.addEventListener('touchstart', startDraw, { passive: false });
-    canvas.addEventListener('touchend', endDraw);
-    canvas.addEventListener('touchmove', draw, { passive: false });
-
-    document.getElementById(clearBtnId).addEventListener('click', function() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        hidden.value = '';
-    });
-}
-
-makeSignaturePad('adminSignaturePad', 'adminSigData', 'clearAdminSig',
-    document.getElementById('adminSigData').value || null);
-makeSignaturePad('userSignaturePad', 'userSigData', 'clearUserSig',
-    document.getElementById('userSigData').value || null);
+adminApprove.addEventListener('change', function () {
+    adminSigBox.style.opacity = this.checked ? '1' : '0.25';
+    adminSigBox.style.filter = this.checked ? 'none' : 'grayscale(1)';
+});
+userApprove.addEventListener('change', function () {
+    userSigBox.style.opacity = this.checked ? '1' : '0.25';
+    userSigBox.style.filter = this.checked ? 'none' : 'grayscale(1)';
+});
 </script>
 {% endblock %}

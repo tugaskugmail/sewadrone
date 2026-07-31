@@ -571,8 +571,10 @@ def handover_create(booking_id):
                 all_urls = existing_urls + uploaded
                 photo_out_urls = json.dumps(all_urls)
                 photo_out_attached = True
-        admin_signature = request.form.get('admin_signature', '') or None
-        user_signature  = request.form.get('user_signature', '') or None
+        # Signature otomatis dari database (tidak perlu tanda tangan manual)
+        # Checkbox persetujuan menampilkan tanda tangan yang tersimpan
+        admin_signature = current_user.signature if request.form.get('admin_approve') == '1' else None
+        user_signature  = booking.user.signature if request.form.get('user_approve') == '1' else None
         
         # Generate nomor dokumen
         today = datetime.now()
@@ -685,8 +687,10 @@ def return_create(booking_id):
         deposit_returned = request.form.get('deposit_returned') == 'on'
         deposit_deducted = request.form.get('deposit_deducted', type=int, default=0)
         photo_return_attached = request.form.get('photo_return_attached') == 'on'
-        admin_signature = request.form.get('admin_signature', '') or None
-        user_signature  = request.form.get('user_signature', '') or None
+        # Signature otomatis dari database (tidak perlu tanda tangan manual)
+        # Checkbox persetujuan menampilkan tanda tangan yang tersimpan
+        admin_signature = current_user.signature if request.form.get('admin_approve') == '1' else None
+        user_signature  = booking.user.signature if request.form.get('user_approve') == '1' else None
 
         # Handle upload foto pengembalian
         photo_return_url = None
