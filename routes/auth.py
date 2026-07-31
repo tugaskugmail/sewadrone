@@ -18,7 +18,8 @@ def upload_file(file, folder='uploads'):
     if file and allowed_file(file.filename):
         ext = file.filename.rsplit('.', 1)[1].lower()
         filename = f"{uuid.uuid4().hex}.{ext}"
-        filepath = os.path.join('static', folder)
+        from flask import current_app
+        filepath = os.path.join(current_app.root_path, 'static', folder)
         os.makedirs(filepath, exist_ok=True)
         file.save(os.path.join(filepath, filename))
         return f"/static/{folder}/{filename}"

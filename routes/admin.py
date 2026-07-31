@@ -96,7 +96,7 @@ def drone_create():
                 ext = file.filename.rsplit('.', 1)[-1].lower()
                 if ext in {'jpg', 'jpeg', 'png', 'webp', 'gif'}:
                     fname = f"drone_{uuid.uuid4().hex}.{ext}"
-                    fpath = os.path.join('static', 'uploads', 'drones')
+                    fpath = os.path.join(current_app.root_path, 'static', 'uploads', 'drones')
                     os.makedirs(fpath, exist_ok=True)
                     file.save(os.path.join(fpath, fname))
                     image_url = f"/static/uploads/drones/{fname}"
@@ -143,7 +143,7 @@ def drone_edit(drone_id):
                 ext = file.filename.rsplit('.', 1)[-1].lower()
                 if ext in {'jpg', 'jpeg', 'png', 'webp', 'gif'}:
                     fname = f"drone_{uuid.uuid4().hex}.{ext}"
-                    fpath = os.path.join('static', 'uploads', 'drones')
+                    fpath = os.path.join(current_app.root_path, 'static', 'uploads', 'drones')
                     os.makedirs(fpath, exist_ok=True)
                     file.save(os.path.join(fpath, fname))
                     drone.image_url = f"/static/uploads/drones/{fname}"
@@ -561,7 +561,7 @@ def handover_create(booking_id):
                     if ext in {'jpg', 'jpeg', 'png', 'webp'}:
                         import uuid, os
                         fname = f"handover_{uuid.uuid4().hex}.{ext}"
-                        fpath = os.path.join('static', 'uploads', 'handover')
+                        fpath = os.path.join(current_app.root_path, 'static', 'uploads', 'handover')
                         os.makedirs(fpath, exist_ok=True)
                         file.save(os.path.join(fpath, fname))
                         uploaded.append(f"/static/uploads/handover/{fname}")
@@ -703,7 +703,7 @@ def return_create(booking_id):
                     ext = file.filename.rsplit('.', 1)[-1].lower()
                     if ext in {'jpg', 'jpeg', 'png', 'webp'}:
                         fname = f"return_{uuid.uuid4().hex}.{ext}"
-                        fpath = os.path.join('static', 'uploads', 'returns')
+                        fpath = os.path.join(current_app.root_path, 'static', 'uploads', 'returns')
                         os.makedirs(fpath, exist_ok=True)
                         file.save(os.path.join(fpath, fname))
                         uploaded.append(f"/static/uploads/returns/{fname}")
