@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% block title %}{% if drone %}Edit {{ drone.name }}{% else %}Tambah Drone{% endif %} — Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+    <div class="row">
+        <div class="col-lg-2 col-md-3 p-0">
+            <div class="admin-sidebar p-3">
+                <h6 class="fw-bold text-muted text-uppercase small mb-3">
+                    <i class="bi bi-shield-lock me-2"></i>Admin Panel
+                </h6>
+                <nav class="nav flex-column">
+                    <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                    <a class="nav-link active" href="{{ url_for('admin.drones') }}">
+                        <i class="bi bi-drone"></i> Drone
+                    </a>
+                    <a class="nav-link" href="{{ url_for('admin.bookings') }}">
+                        <i class="bi bi-calendar-check"></i> Bookings
+                    </a>
+                    <a class="nav-link" href="{{ url_for('admin.users') }}">
+                        <i class="bi bi-people"></i> Users
+                    </a>
+                    <hr class="border-secondary">
+                    <a class="nav-link text-muted" href="{{ url_for('main.index') }}">
+                        <i class="bi bi-arrow-left"></i> Ke Website
+                    </a>
+                </nav>
+            </div>
+        </div>
+        <div class="col-lg-10 col-md-9 p-4">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.drones') }}">Drone</a></li>
+                    <li class="breadcrumb-item active">{% if drone %}Edit{% else %}Tambah{% endif %}</li>
+                </ol>
+            </nav>
+            <h4 class="fw-bold mb-4">
+                {% if drone %}
+                <i class="bi bi-pencil me-2"></i>Edit Drone: {{ drone.name }}
+                {% else %}
+                <i class="bi bi-plus-lg me-2"></i>Tambah Drone Baru
+                {% endif %}
+            </h4>
+
+            <div class="card">
+                <div class="card-body p-4">
+                    <form method="POST" enctype="multipart/form-data"
+                          action="{% if drone %}{{ url_for('admin.drone_edit', drone_id=drone.id) }}{% else %}{{ url_for('admin.drone_create') }}{% endif %}">
+                        <div class="row g-3">
+                            <!-- Nama, Brand, Model -->
+                            <div class="col-md-4">
+                                <label class="form-label">Nama Drone <span class="text-danger">*</span></label>
+                                <input type="text" name="name" class="form-control"
+                                       value="{{ drone.name if drone else '' }}" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Brand <span class="text-danger">*</span></label>
+                                <input type="text" name="brand" class="form-control"
+                                       value="{{ drone.brand if drone else '' }}" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Model <span class="text-danger">*</span></label>
+                                <input type="text" name="model" class="form-control"
+                                       value="{{ drone.model if drone else '' }}" required>
+                            </div>
+
+                            <!-- Kategori -->
+                            <div class="col-md-4">
+                                <label class="form-label">Kategori <span class="text-danger">*</span></label>
+                                <select name="category" class="form-select" required>
+                                    <option value="">-- Pilih Kategori --</option>
+                                    {% for cat in ['Compact', 'Mid-range', 'Professional', 'Enterprise'] %}
+                                    <option value="{{ cat }}"
+                                        {% if drone and drone.category == cat %}selected{% endif %}>
+                                        {{ cat }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Harga Sewa/Hari (Rp) <span class="text-danger">*</span></label>
+                                <input type="number" name="daily_rate" class="form-control"
+                                       value="{{ drone.daily_rate if drone else '' }}" required min="0">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Deposit (Rp) <span class="text-danger">*</span></label>
+                                <input type="number" name="deposit" class="form-control"
+                                       value="{{ drone.deposit if drone else '' }}" required min="0">
+                            </div>
+
+                            <!-- Stok -->
+                            <div class="col-md-3">
+                                <label class="form-label">Stok Unit</label>
+                                <input type="number" name="stock" class="form-control"
+                                       value="{{ drone.stock if drone else 1 }}" min="0">
+                            </div>
+
+                            <!-- Upload Gambar -->
+                            <div class="col-md-9">
+                                <label class="form-label">Gambar Drone</label>
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-md-6">
+                                        <label class="form-label small text-muted mb-1">Upload File (JPG, PNG, WEBP)</label>
+                                        <input type="file" name="image_file" class="form-control"
+                                               id="imageFile" accept="image/*">
+                                    </div>
+                                    <div class="col-md-1 text-center text-muted small pt-4">atau</div>
+                                    <div class="col-md-5">
+                                        <label class="form-label small text-muted mb-1">URL Gambar</label>
+                                        <input type="text" name="image_url" class="form-control"
+                                               id="imageUrl" placeholder="https://..."
+                                               value="{{ drone.image_url if drone and not drone.image_url.startswith('/static/uploads') else '' }}">
+                                    </div>
+                                </div>
+                                <!-- Preview -->
+                                <div class="mt-2" id="imagePreview">
+                                    {% if drone and drone.image_url %}
+                                    <img src="{{ drone.image_url }}" alt="Preview"
+                                         style="max-height: 150px; border-radius: 8px; border: 2px solid #0d6efd;"
+                                         id="previewImg">
+                                    {% else %}
+                                    <img src="" alt="Preview" id="previewImg"
+                                         style="max-height: 150px; border-radius: 8px; border: 2px solid #0d6efd; display:none;">
+                                    {% endif %}
+                                </div>
+                                <small class="text-muted">Upload file akan menggantikan URL. Kosongkan keduanya untuk pakai gambar default.</small>
+                            </div>
+
+                            <!-- Deskripsi -->
+                            <div class="col-12">
+                                <label class="form-label">Deskripsi</label>
+                                <textarea name="description" class="form-control" rows="3">{{ drone.description if drone else '' }}</textarea>
+                            </div>
+
+                            <!-- Spesifikasi -->
+                            <div class="col-12">
+                                <label class="form-label">Spesifikasi</label>
+                                <textarea name="specs" class="form-control" rows="4"
+                                          placeholder="Contoh: Berat: 895g, Kamera: 4/3 CMOS, Flight time: 46 menit...">{{ drone.specs if drone else '' }}</textarea>
+                            </div>
+
+                            <!-- Tersedia (edit only) -->
+                            {% if drone %}
+                            <div class="col-12">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="is_available"
+                                           id="available" {% if drone.is_available %}checked{% endif %}>
+                                    <label class="form-check-label" for="available">Drone Tersedia untuk Disewa</label>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <div class="col-12">
+                                <hr class="border-secondary">
+                                <button type="submit" class="btn btn-primary px-4">
+                                    <i class="bi bi-save me-1"></i>
+                                    {% if drone %}Simpan Perubahan{% else %}Tambah Drone{% endif %}
+                                </button>
+                                <a href="{{ url_for('admin.drones') }}" class="btn btn-outline-secondary ms-2">Batal</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Preview gambar dari file upload
+document.getElementById('imageFile').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = document.getElementById('previewImg');
+            img.src = e.target.result;
+            img.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+        document.getElementById('imageUrl').value = ''; // clear URL field
+    }
+});
+
+// Preview dari URL input
+document.getElementById('imageUrl').addEventListener('input', function(e) {
+    const url = e.target.value.trim();
+    const img = document.getElementById('previewImg');
+    if (url) {
+        img.src = url;
+        img.style.display = 'block';
+        img.onerror = function() { img.style.display = 'none'; };
+    }
+});
+</script>
+{% endblock %}

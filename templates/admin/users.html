@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}Kelola Users — SewaDroneCilegonBanten Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+    <div class="row">
+        <div class="col-lg-2 col-md-3 p-0">
+            <div class="admin-sidebar p-3">
+                <h6 class="fw-bold text-muted text-uppercase small mb-3">
+                    <i class="bi bi-shield-lock me-2"></i>Admin Panel
+                </h6>
+                <nav class="nav flex-column">
+                    <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                    <a class="nav-link" href="{{ url_for('admin.drones') }}">
+                        <i class="bi bi-drone"></i> Drone
+                    </a>
+                    <a class="nav-link" href="{{ url_for('admin.bookings') }}">
+                        <i class="bi bi-calendar-check"></i> Bookings
+                    </a>
+                    <a class="nav-link active" href="{{ url_for('admin.users') }}">
+                        <i class="bi bi-people"></i> Users
+                    </a>
+                    <hr class="border-secondary">
+                    <a class="nav-link text-muted" href="{{ url_for('main.index') }}">
+                        <i class="bi bi-arrow-left"></i> Ke Website
+                    </a>
+                </nav>
+            </div>
+        </div>
+        <div class="col-lg-10 col-md-9 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h4 class="fw-bold mb-1"><i class="bi bi-people me-2"></i>Kelola Users</h4>
+                    <p class="text-muted mb-0">{{ users|length }} user terdaftar</p>
+                </div>
+                <a href="{{ url_for('admin.user_create') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i> Tambah User
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nama</th>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Telepon</th>
+                                    <th>Role</th>
+                                    <th>Booking</th>
+                                    <th>Bergabung</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for u in users %}
+                                <tr>
+                                    <td>{{ u.id }}</td>
+                                    <td>
+                                        <strong>{{ u.full_name }}</strong>
+                                        {% if u.nik %}
+                                        <br><small class="text-muted">NIK: {{ u.nik }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ u.username }}</td>
+                                    <td><small>{{ u.email }}</small></td>
+                                    <td>{{ u.phone or '-' }}</td>
+                                    <td>
+                                        {% if u.is_superadmin %}
+                                        <span class="badge bg-danger bg-opacity-25 text-danger">
+                                            <i class="bi bi-shield-fill-exclamation me-1"></i>Superadmin
+                                        </span>
+                                        {% elif u.is_admin %}
+                                        <span class="badge bg-warning bg-opacity-25 text-warning">
+                                            <i class="bi bi-shield-lock me-1"></i>Admin
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-info bg-opacity-25 text-info">User</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ u.bookings|length }}</td>
+                                    <td><small>{{ u.created_at.strftime('%d/%m/%Y') }}</small></td>
+                                    <td>
+                                        <div class="d-flex gap-1 flex-wrap">
+                                            {% if u.id != current_user.id %}
+                                            <!-- Toggle Role -->
+                                            <form method="POST" action="{{ url_for('admin.user_toggle_role', user_id=u.id) }}">
+                                                <button type="submit" class="btn btn-sm btn-outline-warning" 
+                                                        title="{% if u.is_admin %}Jadikan User{% else %}Jadikan Admin{% endif %}"
+                                                        onclick="return confirm('Ubah role {{ u.username }}?')">
+                                                    <i class="bi bi-arrow-repeat"></i>
+                                                </button>
+                                            </form>
+                                            <!-- Toggle Superadmin (hanya superadmin) -->
+                                            {% if current_user.is_superadmin %}
+                                            <form method="POST" action="{{ url_for('admin.user_toggle_superadmin', user_id=u.id) }}">
+                                                <button type="submit" 
+                                                        class="btn btn-sm {% if u.is_superadmin %}btn-danger{% else %}btn-outline-danger{% endif %}"
+                                                        title="{% if u.is_superadmin %}Cabut Superadmin{% else %}Jadikan Superadmin{% endif %}"
+                                                        onclick="return confirm('{% if u.is_superadmin %}Cabut superadmin dari {% else %}Jadikan superadmin {% endif %}{{ u.username }}?')">
+                                                    <i class="bi bi-shield-fill-exclamation"></i>
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                            {% endif %}
+                                            
+                                            <!-- Edit -->
+                                            <a href="{{ url_for('admin.user_edit', user_id=u.id) }}" 
+                                               class="btn btn-sm btn-outline-primary" title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            
+                                            {% if u.id != current_user.id %}
+                                            <!-- Delete -->
+                                            <form method="POST" action="{{ url_for('admin.user_delete', user_id=u.id) }}">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                        title="Hapus"
+                                                        onclick="return confirm('Hapus user {{ u.username }}?')">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="9" class="text-center text-muted py-5">
+                                        <i class="bi bi-people" style="font-size: 3rem;"></i>
+                                        <p class="mt-2">Tidak ada user</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

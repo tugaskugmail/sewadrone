@@ -1,0 +1,90 @@
+{% macro photo_upload(field_name, label, existing_urls_json=None) %}
+{# Reusable photo upload + gallery component #}
+<div class="photo-gallery-section mt-3 p-3 rounded" style="border: 1px dashed #6c757d;">
+    <label class="fw-semibold mb-2 d-block">
+        <i class="bi bi-camera me-1"></i> {{ label }}
+    </label>
+
+    {# Upload input #}
+    <input type="file" name="{{ field_name }}" class="form-control mb-2"
+           id="{{ field_name }}_input" accept="image/*" multiple>
+    <small class="text-muted">Upload foto (JPG, PNG, WEBP). Bisa lebih dari 1. Foto baru ditambahkan ke yang sudah ada.</small>
+
+    {# Preview foto baru sebelum upload #}
+    <div id="{{ field_name }}_preview" class="d-flex gap-2 flex-wrap mt-2"></div>
+
+    {# Galeri foto yang sudah tersimpan #}
+    {% if existing_urls_json %}
+    {% set urls = existing_urls_json | from_json %}
+    {% if urls %}
+    <div class="mt-3">
+        <small class="text-muted fw-semibold d-block mb-2">📸 Foto Tersimpan ({{ urls | length }})</small>
+        <div class="d-flex gap-2 flex-wrap">
+            {% for url in urls %}
+            <div class="position-relative">
+                <a href="{{ url }}" target="_blank">
+                    <img src="{{ url }}" alt="Foto {{ loop.index }}"
+                         style="width:90px;height:90px;object-fit:cover;border-radius:8px;border:2px solid #198754;cursor:pointer;"
+                         onerror="this.parentElement.parentElement.style.display='none'">
+                </a>
+                <span class="position-absolute top-0 start-0 badge bg-dark opacity-75" style="font-size:0.6rem;">{{ loop.index }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    {% endif %}
+</div>
+
+<script>
+(function() {
+    var inp = document.getElementById('{{ field_name }}_input');
+    var prev = document.getElementById('{{ field_name }}_preview');
+    if (!inp) return;
+    inp.addEventListener('change', function(e) {
+        prev.innerHTML = '';
+        Array.from(e.target.files).forEach(function(f, i) {
+            var reader = new FileReader();
+            reader.onload = function(ev) {
+                var wrap = document.createElement('div');
+                wrap.style.cssText = 'position:relative;';
+                var img = document.createElement('img');
+                img.src = ev.target.result;
+                img.style.cssText = 'width:90px;height:90px;object-fit:cover;border-radius:8px;border:2px dashed #ffc107;';
+                var badge = document.createElement('span');
+                badge.textContent = 'Baru';
+                badge.style.cssText = 'position:absolute;top:0;right:0;background:#ffc107;color:#000;font-size:0.55rem;padding:1px 4px;border-radius:4px;';
+                wrap.appendChild(img);
+                wrap.appendChild(badge);
+                prev.appendChild(wrap);
+            };
+            reader.readAsDataURL(f);
+        });
+    });
+})();
+</script>
+{% endmacro %}
+
+
+{% macro photo_gallery_view(urls_json, title='Galeri Foto') %}
+{# Read-only gallery display #}
+{% if urls_json %}
+{% set urls = urls_json | from_json %}
+{% if urls %}
+<div class="mt-3">
+    <small class="fw-semibold text-muted d-block mb-2">📸 {{ title }} ({{ urls | length }} foto)</small>
+    <div class="d-flex gap-2 flex-wrap">
+        {% for url in urls %}
+        <a href="{{ url }}" target="_blank" title="Foto {{ loop.index }}">
+            <img src="{{ url }}" alt="Foto {{ loop.index }}"
+                 style="width:80px;height:80px;object-fit:cover;border-radius:6px;border:2px solid #0d6efd;transition:transform 0.15s;"
+                 onmouseover="this.style.transform='scale(1.1)'"
+                 onmouseout="this.style.transform='scale(1)'"
+                 onerror="this.parentElement.style.display='none'">
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endif %}
+{% endmacro %}

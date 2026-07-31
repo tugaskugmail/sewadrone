@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block title %}Booking {{ drone.name }} — SewaDroneCilegonBanten{% endblock %}
+
+{% block content %}
+<section class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}" class="text-muted">Beranda</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('main.drones') }}" class="text-muted">Drone</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('main.drone_detail', drone_id=drone.id) }}" class="text-muted">{{ drone.name }}</a></li>
+            <li class="breadcrumb-item active">Booking</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card">
+                <div class="card-body p-4">
+                    <h4 class="fw-bold mb-4"><i class="bi bi-calendar-check me-2"></i>Form Booking</h4>
+
+                    <div class="d-flex align-items-center gap-3 mb-4 p-3 bg-primary bg-opacity-10 rounded-3">
+                        <img src="{{ drone.image_url }}" alt="{{ drone.name }}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 10px;"
+                             onerror="this.src='https://placehold.co/100x100/1a1a3e/ffffff?text=Drone'">
+                        <div>
+                            <h5 class="fw-bold mb-1">{{ drone.name }}</h5>
+                            <small class="text-muted">{{ drone.brand }} {{ drone.model }} • {{ drone.category }}</small>
+                            <div class="text-primary fw-bold mt-1">Rp {{ "{:,.0f}".format(drone.daily_rate) }} <small class="text-muted fw-normal">/hari</small></div>
+                        </div>
+                    </div>
+
+                    <form method="POST" action="{{ url_for('main.booking', drone_id=drone.id) }}">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Tanggal Mulai</label>
+                                <input type="date" id="start_date" name="start_date" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Tanggal Selesai</label>
+                                <input type="date" id="end_date" name="end_date" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Lokasi Pengambilan</label>
+                                <input type="text" name="pickup_location" class="form-control" placeholder="Contoh: Jakarta Pusat">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Lokasi Pengembalian</label>
+                                <input type="text" name="return_location" class="form-control" placeholder="Sama dengan pengambilan">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Catatan (opsional)</label>
+                                <textarea name="notes" class="form-control" rows="3"
+                                          placeholder="Ada permintaan khusus? Tulis di sini..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Hidden fields for calculation -->
+                        <input type="hidden" id="daily_rate" value="{{ drone.daily_rate }}">
+                        <input type="hidden" id="deposit" value="{{ drone.deposit }}">
+                        <input type="hidden" id="total_days" name="total_days" value="0">
+                        <input type="hidden" id="total_price" name="total_price" value="0">
+
+                        <div id="calc-result"></div>
+
+                        <button type="submit" class="btn btn-glow btn-lg w-100 mt-4">
+                            <i class="bi bi-check-lg me-2"></i>Konfirmasi Booking
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- SIDEBAR RINGKASAN -->
+        <div class="col-lg-5">
+            <div class="card price-calculator">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-info-circle me-2"></i>Ringkasan Sewa</h5>
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <i class="bi bi-shield-check text-success fs-4"></i>
+                        <div>
+                            <strong>Booking Aman</strong>
+                            <small class="d-block text-muted">Data Anda terenkripsi</small>
+                        </div>
+                    </div>
+                    <hr class="border-secondary">
+                    <h6 class="fw-bold">Ketentuan Sewa:</h6>
+                    <ul class="small text-muted">
+                        <li class="mb-1">Minimal sewa 1 hari</li>
+                        <li class="mb-1">Deposit dikembalikan saat drone dikembalikan dalam kondisi baik</li>
+                        <li class="mb-1">Kerusakan akibat pengguna ditanggung penyewa</li>
+                        <li class="mb-1">Drone wajib dikembalikan tepat waktu</li>
+                        <li class="mb-1">Asuransi tambahan tersedia (Rp 50k/hari)</li>
+                    </ul>
+                    <hr class="border-secondary">
+                    <div class="d-flex align-items-center gap-2 text-muted small">
+                        <i class="bi bi-headset"></i>
+                        Butuh bantuan? <a href="#" class="text-primary">Hubungi kami</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const startDate = document.getElementById('start_date');
+    const endDate = document.getElementById('end_date');
+    const calcResult = document.getElementById('calc-result');
+
+    // Set default tanggal: hari ini (start) dan besok (end)
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const formatDate = (date) => date.toISOString().split('T')[0];
+    
+    if (!startDate.value) startDate.value = formatDate(today);
+    if (!endDate.value) endDate.value = formatDate(tomorrow);
+    
+    startDate.setAttribute('min', formatDate(today));
+
+    if (startDate.value) {
+        endDate.setAttribute('min', startDate.value);
+    }
+
+    function updatePrice() {
+        if (startDate.value && endDate.value) {
+            const start = new Date(startDate.value);
+            const end = new Date(endDate.value);
+            if (end >= start) {
+                const days = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
+                const rate = parseInt(document.getElementById('daily_rate').value);
+                const deposit = parseInt(document.getElementById('deposit').value);
+                const total = rate * days;
+
+                document.getElementById('total_days').value = days;
+                document.getElementById('total_price').value = total;
+
+                calcResult.innerHTML = `
+                    <div class="price-detail mt-3 p-3 bg-dark rounded-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Durasi Sewa</span>
+                            <span class="fw-bold">${days} hari</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Rp ${rate.toLocaleString('id-ID')} × ${days} hari</span>
+                            <span>Rp ${total.toLocaleString('id-ID')}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Deposit (dikembalikan)</span>
+                            <span>Rp ${deposit.toLocaleString('id-ID')}</span>
+                        </div>
+                        <hr class="border-secondary">
+                        <div class="d-flex justify-content-between fw-bold fs-5">
+                            <span>Total + Deposit</span>
+                            <span class="text-primary">Rp ${(total + deposit).toLocaleString('id-ID')}</span>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+    }
+
+    startDate.addEventListener('change', function () {
+        endDate.setAttribute('min', startDate.value);
+        updatePrice();
+    });
+    endDate.addEventListener('change', updatePrice);
+
+    if (startDate.value && endDate.value) updatePrice();
+});
+</script>
+{% endblock %}

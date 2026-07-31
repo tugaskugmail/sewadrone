@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Daftar Drone — SewaDroneCilegonBanten{% endblock %}
+
+{% block content %}
+<section class="container mt-4">
+    <div class="row">
+        <!-- SIDEBAR FILTER -->
+        <div class="col-lg-3 mb-4">
+            <div class="card p-3 sticky-top" style="top: 80px;">
+                <h5 class="fw-bold mb-3"><i class="bi bi-funnel me-2"></i>Filter</h5>
+                <form method="GET" action="{{ url_for('main.drones') }}">
+                    <div class="mb-3">
+                        <label class="form-label">Cari</label>
+                        <div class="input-group">
+                            <input type="text" name="search" class="form-control" placeholder="Nama drone..." value="{{ request.args.get('search', '') }}">
+                            <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i></button>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Kategori</label>
+                        <select name="category" class="form-select" onchange="this.form.submit()">
+                            <option value="">Semua Kategori</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat }}" {% if request.args.get('category') == cat %}selected{% endif %}>{{ cat }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Merek</label>
+                        <select name="brand" class="form-select" onchange="this.form.submit()">
+                            <option value="">Semua Merek</option>
+                            {% for b in brands %}
+                            <option value="{{ b }}" {% if request.args.get('brand') == b %}selected{% endif %}>{{ b }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Harga per Hari (Rp)</label>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <input type="number" name="min_price" class="form-control" placeholder="Min" value="{{ request.args.get('min_price', '') }}">
+                            </div>
+                            <div class="col-6">
+                                <input type="number" name="max_price" class="form-control" placeholder="Max" value="{{ request.args.get('max_price', '') }}">
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Terapkan Filter</button>
+                    <a href="{{ url_for('main.drones') }}" class="btn btn-outline-secondary w-100 mt-2">Reset</a>
+                </form>
+            </div>
+        </div>
+
+        <!-- DRONE LIST -->
+        <div class="col-lg-9">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="fw-bold mb-0"><i class="bi bi-drone me-2"></i>Daftar Drone</h4>
+                <span class="text-muted">{{ drones|length }} drone ditemukan</span>
+            </div>
+
+            {% if drones %}
+            <div class="row g-4">
+                {% for drone in drones %}
+                <div class="col-xl-4 col-md-6">
+                    <div class="card drone-card h-100 position-relative">
+                        <span class="category-badge">{{ drone.category }}</span>
+                        <img src="{{ drone.image_url }}" class="card-img-top" alt="{{ drone.name }}"
+                             onerror="this.src='https://placehold.co/600x400/1a1a3e/ffffff?text={{ drone.name|urlencode }}'">
+                        <div class="card-body d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h5 class="card-title fw-bold mb-0">{{ drone.name }}</h5>
+                                    <small class="text-muted">{{ drone.brand }} {{ drone.model }}</small>
+                                </div>
+                                <div class="stars">
+                                    <i class="bi bi-star-fill"></i> {{ drone.rating }}
+                                </div>
+                            </div>
+                            <p class="card-text text-muted small mt-2">{{ drone.description[:100] }}{% if drone.description|length > 100 %}...{% endif %}</p>
+                            <div class="d-flex gap-2 text-muted small mb-2">
+                                <span><i class="bi bi-box"></i> Stok: {{ drone.stock }}</span>
+                                <span><i class="bi bi-clock"></i> {{ drone.daily_rate // 10000 }}0k/hari</span>
+                            </div>
+                            <div class="mt-auto">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="price-tag">Rp {{ "{:,.0f}".format(drone.daily_rate) }}</span>
+                                        <small class="text-muted">/hari</small>
+                                    </div>
+                                    <a href="{{ url_for('main.drone_detail', drone_id=drone.id) }}" class="btn btn-primary btn-sm">
+                                        Detail <i class="bi bi-arrow-right ms-1"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-drone text-muted" style="font-size: 4rem;"></i>
+                <h5 class="mt-3">Tidak ada drone ditemukan</h5>
+                <p class="text-muted">Coba ubah filter pencarian Anda</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

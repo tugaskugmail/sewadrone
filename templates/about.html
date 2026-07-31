@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Tentang Kami — SewaDroneCilegonBanten{% endblock %}
+
+{% block content %}
+<section class="container mt-4">
+    <div class="row g-5 align-items-center">
+        <div class="col-lg-6">
+            <span class="badge bg-primary bg-opacity-25 text-primary mb-2">Tentang Kami</span>
+            <h1 class="fw-bold mb-3">Mitrisi Drone <span class="text-primary">Terpercaya</span> di Indonesia</h1>
+            <p class="text-muted fs-5">SewaDroneCilegonBanten adalah platform sewa drone profesional yang telah melayani 500+ pelanggan sejak 2021.</p>
+            <p class="text-muted">Kami menyediakan berbagai jenis drone dari brand ternama seperti DJI, Autel, dan lainnya — mulai dari drone compact untuk pemula hingga drone enterprise untuk kebutuhan mapping, survey, dan inspeksi industri.</p>
+
+            <div class="row g-3 mt-3">
+                <div class="col-6">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-check-circle-fill text-primary"></i>
+                        <span>Drone Terawat</span>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-check-circle-fill text-primary"></i>
+                        <span>Harga Kompetitif</span>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-check-circle-fill text-primary"></i>
+                        <span>Support 24/7</span>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-check-circle-fill text-primary"></i>
+                        <span>Asuransi Tersedia</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <img src="https://images.unsplash.com/photo-1507582020474-9a35b7d455d9?w=600&q=80" alt="About SewaDroneCilegonBanten" class="img-fluid rounded-4 shadow-lg">
+        </div>
+    </div>
+
+    <div class="row g-4 mt-5">
+        <div class="col-md-4">
+            <div class="card text-center h-100">
+                <div class="card-body p-4">
+                    <i class="bi bi-eye text-primary" style="font-size: 2.5rem;"></i>
+                    <h5 class="fw-bold mt-3">Visi</h5>
+                    <p class="text-muted">Menjadi platform sewa drone terdepan di Indonesia yang mendukung perkembangan industri kreatif dan teknologi.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center h-100">
+                <div class="card-body p-4">
+                    <i class="bi bi-bullseye text-primary" style="font-size: 2.5rem;"></i>
+                    <h5 class="fw-bold mt-3">Misi</h5>
+                    <p class="text-muted">Menyediakan akses drone berkualitas tinggi dengan harga terjangkau dan layanan terbaik bagi semua kalangan.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center h-100">
+                <div class="card-body p-4">
+                    <i class="bi bi-heart text-primary" style="font-size: 2.5rem;"></i>
+                    <h5 class="fw-bold mt-3">Nilai</h5>
+                    <p class="text-muted">Transparan, profesional, dan berorientasi pada kepuasan pelanggan dalam setiap layanan.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-5 p-5 bg-dark rounded-4 text-center">
+        <h2 class="fw-bold">Siap untuk terbang?</h2>
+        <p class="text-muted mb-4">Sewa drone sekarang dan wujudkan kreativitas Anda</p>
+        <a href="{{ url_for('main.drones') }}" class="btn btn-glow btn-lg">
+            <i class="bi bi-search me-2"></i>Lihat Koleksi Drone
+        </a>
+    </div>
+</section>
+{% endblock %}

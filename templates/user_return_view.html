@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+{% extends "base.html" %}
+
+{% block title %}Berita Acara Pengembalian{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.my_bookings') }}">My Bookings</a></li>
+            <li class="breadcrumb-item active">BAST Pengembalian</li>
+        </ol>
+    </nav>
+
+    <div class="card bg-dark border-success mb-4">
+        <div class="card-header bg-success text-white">
+            <h4 class="mb-0">📋 Berita Acara Pengembalian Drone</h4>
+            <small>Booking #{{ booking.id }} - {{ booking.drone.name }}</small>
+        </div>
+        <div class="card-body">
+            <!-- Info -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h6 class="text-warning">👤 Data Anda</h6>
+                    <table class="table table-dark table-sm">
+                        <tr><td>Nama</td><td>{{ current_user.full_name }}</td></tr>
+                        <tr><td>HP</td><td>{{ current_user.phone or '-' }}</td></tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="text-warning">🚁 Data Sewa</h6>
+                    <table class="table table-dark table-sm">
+                        <tr><td>Drone</td><td>{{ booking.drone.name }}</td></tr>
+                        <tr><td>Tanggal Sewa</td><td>{{ booking.start_date }} s/d {{ booking.end_date }}</td></tr>
+                        <tr><td>Total Biaya</td><td>Rp {{ "{:,}".format(booking.total_price) }}</td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Waktu Pengembalian -->
+            <div class="card bg-secondary mb-4">
+                <div class="card-header">⏰ Waktu Pengembalian</div>
+                <div class="card-body">
+                    <p><strong>Jam Kembali:</strong> {{ return_record.return_time_in or '-' }}</p>
+                    <p><strong>Tanggal:</strong> {{ return_record.return_date.strftime('%d %B %Y') if return_record.return_date else '-' }}</p>
+                </div>
+            </div>
+
+            <!-- Checklist Kelengkapan -->
+            <div class="card bg-secondary mb-4">
+                <div class="card-header">📦 Checklist Kelengkapan (Saat Kembali)</div>
+                <div class="card-body">
+                    <table class="table table-dark table-bordered">
+                        <thead>
+                            <tr><th>Item</th><th>Qty</th><th>Kondisi</th><th>Catatan</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for item in equipment_list %}
+                            <tr>
+                                <td>{{ item.item }}</td>
+                                <td>{{ item.qty }}</td>
+                                <td>
+                                    {% if item.condition == 'baik' %}
+                                        <span class="badge bg-success">Baik</span>
+                                    {% elif item.condition == 'rusak' %}
+                                        <span class="badge bg-danger">Rusak</span>
+                                    {% elif item.condition == 'hilang' %}
+                                        <span class="badge bg-warning">Hilang</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ item.notes or '-' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Checklist Kondisi -->
+            <div class="card bg-secondary mb-4">
+                <div class="card-header">🔧 Kondisi Drone (Saat Kembali)</div>
+                <div class="card-body">
+                    <table class="table table-dark table-bordered">
+                        <thead>
+                            <tr><th>Item</th><th>Status</th><th>Catatan</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for item in condition_list %}
+                            <tr>
+                                <td>{{ item.item }}</td>
+                                <td>
+                                    {% if item.status == 'ok' %}
+                                        <span class="badge bg-success">OK</span>
+                                    {% elif item.status == 'warning' %}
+                                        <span class="badge bg-warning">Warning</span>
+                                    {% elif item.status == 'error' %}
+                                        <span class="badge bg-danger">Error</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ item.notes or '-' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Kerusakan & Deposit -->
+            {% if return_record.notes_damage or return_record.damage_cost %}
+            <div class="alert alert-warning mb-4">
+                <h5>⚠️ Catatan Kerusakan</h5>
+                <p>{{ return_record.notes_damage or '-' }}</p>
+                {% if return_record.damage_cost > 0 %}
+                <p><strong>Biaya Perbaikan:</strong> Rp {{ "{:,}".format(return_record.damage_cost) }}</p>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card bg-secondary">
+                        <div class="card-body text-center">
+                            <h5>💰 Deposit</h5>
+                            {% if return_record.deposit_returned %}
+                                <span class="badge bg-success">Dikembalikan Penuh</span>
+                            {% elif return_record.deposit_deducted > 0 %}
+                                <span class="badge bg-warning">Dipotong Rp {{ "{:,}".format(return_record.deposit_deducted) }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Menunggu</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-secondary">
+                        <div class="card-body text-center">
+                            <h5>📷 Foto</h5>
+                            <span class="badge bg-info">{{ 'Terlampir' if return_record.photo_return_attached else 'Tidak' }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-secondary">
+                        <div class="card-body text-center">
+                            <h5>✅ Status</h5>
+                            <span class="badge bg-success">Selesai</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Completed -->
+            {% if booking.status == 'completed' %}
+            <div class="alert alert-success">
+                <h5>🎉 Booking Selesai</h5>
+                <p>Terima kasih telah menggunakan layanan Sewa Drone Cilegon Banten.</p>
+                <p>Semoga puas dengan layanan kami. Sampai jumpa kembali!</p>
+            </div>
+            {% endif %}
+
+            <a href="{{ url_for('main.my_bookings') }}" class="btn btn-secondary">← Kembali ke Bookings</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

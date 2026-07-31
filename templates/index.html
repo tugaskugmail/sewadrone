@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+{% block title %}SewaDroneCilegonBanten — Sewa Drone Professional{% endblock %}
+
+{% block content %}
+<!-- ======== HERO ======== -->
+<section class="hero-section">
+    <div class="container hero-content">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6 fade-in">
+                <p class="text-primary fw-semibold mb-2">
+                    <i class="bi bi-drone me-1"></i> Platform Sewa Drone No. 1 di Indonesia
+                </p>
+                <h1 class="hero-title mb-4">
+                    Sewa Drone <span>Professional</span><br>Untuk Kebutuhan Anda
+                </h1>
+                <p class="text-muted mb-4 fs-5">
+                    Dari mapping, aerial photography, inspeksi, hingga sinematografi — 
+                    kami sediakan drone terbaik dengan harga sewa terjangkau.
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a href="{{ url_for('main.drones') }}" class="btn btn-glow btn-lg px-4">
+                        <i class="bi bi-search me-2"></i>Lihat Drone
+                    </a>
+                    <a href="{{ url_for('main.about') }}" class="btn btn-outline-light btn-lg px-4">
+                        <i class="bi bi-info-circle me-2"></i>Pelajari
+                    </a>
+                </div>
+                <div class="d-flex gap-4 mt-4 pt-3">
+                    <div>
+                        <strong class="fs-4">50+</strong>
+                        <small class="d-block text-muted">Drone Tersedia</small>
+                    </div>
+                    <div>
+                        <strong class="fs-4">500+</strong>
+                        <small class="d-block text-muted">Pelanggan Puas</small>
+                    </div>
+                    <div>
+                        <strong class="fs-4">5 Tahun</strong>
+                        <small class="d-block text-muted">Pengalaman</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 fade-in text-center">
+                <img src="{{ url_for('static', filename='img/hero-bg.png') }}" 
+                     alt="Drone Hero" class="img-fluid rounded-4 shadow-lg"
+                     style="max-height: 500px; object-fit: cover;">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ======== STATS ======== -->
+<section class="container mt-5 pt-4">
+    <div class="row g-4">
+        <div class="col-md-3 col-6">
+            <div class="stat-card">
+                <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                    <i class="bi bi-drone"></i>
+                </div>
+                <div class="stat-number">{{ featured_drones|length }}+</div>
+                <div class="text-muted">Drone Tersedia</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="stat-card">
+                <div class="stat-icon bg-success bg-opacity-10 text-success">
+                    <i class="bi bi-people"></i>
+                </div>
+                <div class="stat-number">500+</div>
+                <div class="text-muted">Pelanggan</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="stat-card">
+                <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                    <i class="bi bi-calendar-check"></i>
+                </div>
+                <div class="stat-number">1,200+</div>
+                <div class="text-muted">Booking Sukses</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="stat-card">
+                <div class="stat-icon bg-info bg-opacity-10 text-info">
+                    <i class="bi bi-star"></i>
+                </div>
+                <div class="stat-number">4.9/5</div>
+                <div class="text-muted">Rating Pelanggan</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ======== FEATURED DRONES ======== -->
+<section class="container mt-5 pt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold">Drone Populer</h2>
+            <p class="text-muted">Drone paling sering disewa oleh pelanggan kami</p>
+        </div>
+        <a href="{{ url_for('main.drones') }}" class="btn btn-outline-primary d-none d-md-inline">
+            Lihat Semua <i class="bi bi-arrow-right ms-1"></i>
+        </a>
+    </div>
+
+    <div class="row g-4">
+        {% for drone in featured_drones %}
+        <div class="col-lg-4 col-md-6">
+            <div class="card drone-card h-100 position-relative">
+                <span class="category-badge">{{ drone.category }}</span>
+                <img src="{{ drone.image_url }}" class="card-img-top" alt="{{ drone.name }}"
+                     onerror="this.src='https://placehold.co/600x400/1a1a3e/ffffff?text={{ drone.name|urlencode }}'">
+                <div class="card-body d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h5 class="card-title fw-bold mb-0">{{ drone.name }}</h5>
+                            <small class="text-muted">{{ drone.brand }} {{ drone.model }}</small>
+                        </div>
+                        <div class="stars">
+                            <i class="bi bi-star-fill"></i> {{ drone.rating }}
+                        </div>
+                    </div>
+                    <p class="card-text text-muted small mt-2">{{ drone.description[:120] }}{% if drone.description|length > 120 %}...{% endif %}</p>
+                    <div class="mt-auto">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="price-tag">Rp {{ "{:,.0f}".format(drone.daily_rate) }}</span>
+                                <small class="text-muted">/hari</small>
+                            </div>
+                            <a href="{{ url_for('main.drone_detail', drone_id=drone.id) }}" class="btn btn-primary btn-sm">
+                                Sewa <i class="bi bi-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="text-center mt-4 d-md-none">
+        <a href="{{ url_for('main.drones') }}" class="btn btn-outline-primary">
+            Lihat Semua Drone <i class="bi bi-arrow-right ms-1"></i>
+        </a>
+    </div>
+</section>
+
+<!-- ======== KATEGORI ======== -->
+<section class="container mt-5 pt-4">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold">Kategori Drone</h2>
+        <p class="text-muted">Pilih drone sesuai kebutuhan Anda</p>
+    </div>
+    <div class="row g-4">
+        <div class="col-md-3 col-6">
+            <a href="{{ url_for('main.drones', category='Compact') }}" class="text-decoration-none">
+                <div class="stat-card text-center h-100">
+                    <div class="stat-icon bg-info bg-opacity-10 text-info mx-auto">
+                        <i class="bi bi-phone"></i>
+                    </div>
+                    <h5 class="fw-bold">Compact</h5>
+                    <small class="text-muted">&lt; 250g, tanpa SIM</small>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 col-6">
+            <a href="{{ url_for('main.drones', category='Mid-range') }}" class="text-decoration-none">
+                <div class="stat-card text-center h-100">
+                    <div class="stat-icon text-warning mx-auto" style="background: rgba(255, 193, 7, 0.1);">
+                        <i class="bi bi-camera"></i>
+                    </div>
+                    <h5 class="fw-bold">Mid-range</h5>
+                    <small class="text-muted">Kualitas terbaik harga terjangkau</small>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 col-6">
+            <a href="{{ url_for('main.drones', category='Professional') }}" class="text-decoration-none">
+                <div class="stat-card text-center h-100">
+                    <div class="stat-icon text-primary mx-auto" style="background: rgba(13, 110, 253, 0.1);">
+                        <i class="bi bi-film"></i>
+                    </div>
+                    <h5 class="fw-bold">Professional</h5>
+                    <small class="text-muted">Hasselblad, 5K, 43 menit</small>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 col-6">
+            <a href="{{ url_for('main.drones', category='Enterprise') }}" class="text-decoration-none">
+                <div class="stat-card text-center h-100">
+                    <div class="stat-icon text-danger mx-auto" style="background: rgba(220, 53, 69, 0.1);">
+                        <i class="bi bi-building"></i>
+                    </div>
+                    <h5 class="fw-bold">Enterprise</h5>
+                    <small class="text-muted">Mapping, survey, inspeksi</small>
+                </div>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ======== ALUR SEWA ======== -->
+<section class="container mt-5 pt-4 pb-5">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold">Cara Sewa Drone</h2>
+        <p class="text-muted">Hanya 4 langkah mudah</p>
+    </div>
+    <div class="row g-4">
+        <div class="col-md-3">
+            <div class="text-center">
+                <div class="stat-icon bg-primary bg-opacity-10 text-primary mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2rem;">
+                    <i class="bi bi-search"></i>
+                </div>
+                <h5 class="fw-bold">1. Pilih Drone</h5>
+                <p class="text-muted small">Telusuri koleksi drone dan pilih yang sesuai kebutuhan</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="text-center">
+                <div class="stat-icon bg-success bg-opacity-10 text-success mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2rem;">
+                    <i class="bi bi-calendar"></i>
+                </div>
+                <h5 class="fw-bold">2. Booking</h5>
+                <p class="text-muted small">Pilih tanggal sewa dan isi detail pemesanan</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="text-center">
+                <div class="stat-icon bg-warning bg-opacity-10 text-warning mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2rem;">
+                    <i class="bi bi-credit-card"></i>
+                </div>
+                <h5 class="fw-bold">3. Konfirmasi</h5>
+                <p class="text-muted small">Bayar deposit dan tunggu konfirmasi dari tim kami</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="text-center">
+                <div class="stat-icon bg-info bg-opacity-10 text-info mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2rem;">
+                    <i class="bi bi-rocket-takeoff"></i>
+                </div>
+                <h5 class="fw-bold">4. Terbang!</h5>
+                <p class="text-muted small">Ambil drone di lokasi dan mulai misi Anda</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

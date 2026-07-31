@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Kelola Drone — SewaDroneCilegonBanten Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+    <div class="row">
+        <div class="col-lg-2 col-md-3 p-0">
+            <div class="admin-sidebar p-3">
+                <h6 class="fw-bold text-muted text-uppercase small mb-3">
+                    <i class="bi bi-shield-lock me-2"></i>Admin Panel
+                </h6>
+                <nav class="nav flex-column">
+                    <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                    <a class="nav-link active" href="{{ url_for('admin.drones') }}">
+                        <i class="bi bi-drone"></i> Drone
+                    </a>
+                    <a class="nav-link" href="{{ url_for('admin.bookings') }}">
+                        <i class="bi bi-calendar-check"></i> Bookings
+                    </a>
+                    <a class="nav-link" href="{{ url_for('admin.users') }}">
+                        <i class="bi bi-people"></i> Users
+                    </a>
+                    <hr class="border-secondary">
+                    <a class="nav-link text-muted" href="{{ url_for('main.index') }}">
+                        <i class="bi bi-arrow-left"></i> Ke Website
+                    </a>
+                </nav>
+            </div>
+        </div>
+        <div class="col-lg-10 col-md-9 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h4 class="fw-bold mb-1"><i class="bi bi-drone me-2"></i>Kelola Drone</h4>
+                    <p class="text-muted mb-0">{{ drones|length }} drone terdaftar</p>
+                </div>
+                <a href="{{ url_for('admin.drone_create') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-1"></i> Tambah Drone
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Gambar</th>
+                                    <th>Nama</th>
+                                    <th>Brand</th>
+                                    <th>Kategori</th>
+                                    <th>Harga/Hari</th>
+                                    <th>Deposit</th>
+                                    <th>Stok</th>
+                                    <th>Tersedia</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for d in drones %}
+                                <tr>
+                                    <td>{{ d.id }}</td>
+                                    <td>
+                                        <img src="{{ d.image_url }}" alt="{{ d.name }}"
+                                             style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;"
+                                             onerror="this.src='https://placehold.co/50x50/1a1a3e/ffffff?text=D'">
+                                    </td>
+                                    <td class="fw-medium">{{ d.name[:30] }}</td>
+                                    <td>{{ d.brand }}</td>
+                                    <td><span class="badge bg-primary bg-opacity-25 text-primary">{{ d.category }}</span></td>
+                                    <td>Rp {{ "{:,.0f}".format(d.daily_rate) }}</td>
+                                    <td>Rp {{ "{:,.0f}".format(d.deposit) }}</td>
+                                    <td>{{ d.stock }}</td>
+                                    <td>
+                                        {% if d.is_available %}
+                                        <span class="badge bg-success bg-opacity-25 text-success">Aktif</span>
+                                        {% else %}
+                                        <span class="badge bg-danger bg-opacity-25 text-danger">Nonaktif</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="d-flex gap-1">
+                                            <a href="{{ url_for('admin.drone_serial', drone_id=d.id) }}" 
+                                               class="btn btn-sm btn-outline-warning" title="Serial Number"
+                                               data-bs-toggle="tooltip">
+                                                <i class="bi bi-upc-scan"></i>
+                                            </a>
+                                            <a href="{{ url_for('admin.drone_edit', drone_id=d.id) }}" class="btn btn-sm btn-outline-info" title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <form method="POST" action="{{ url_for('admin.drone_delete', drone_id=d.id) }}" style="display:inline;">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus"
+                                                        onclick="return confirm('Hapus drone {{ d.name }}?')">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="10" class="text-center text-muted py-5">
+                                        <i class="bi bi-drone" style="font-size: 3rem;"></i>
+                                        <p class="mt-2">Belum ada drone. Tambah drone pertama!</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

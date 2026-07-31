@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}Serial Number {{ drone.name }} — Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+    <div class="row">
+        <div class="col-lg-2 col-md-3 p-0">
+            <div class="admin-sidebar p-3">
+                <h6 class="fw-bold text-muted text-uppercase small mb-3">
+                    <i class="bi bi-shield-lock me-2"></i>Admin Panel
+                </h6>
+                <nav class="nav flex-column">
+                    <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                    <a class="nav-link active" href="{{ url_for('admin.drones') }}">
+                        <i class="bi bi-drone"></i> Drone
+                    </a>
+                    <a class="nav-link" href="{{ url_for('admin.bookings') }}">
+                        <i class="bi bi-calendar-check"></i> Bookings
+                    </a>
+                    <a class="nav-link" href="{{ url_for('admin.users') }}">
+                        <i class="bi bi-people"></i> Users
+                    </a>
+                    <hr class="border-secondary">
+                    <a class="nav-link text-muted" href="{{ url_for('main.index') }}">
+                        <i class="bi bi-arrow-left"></i> Ke Website
+                    </a>
+                </nav>
+            </div>
+        </div>
+        <div class="col-lg-10 col-md-9 p-4">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.drones') }}">Drone</a></li>
+                    <li class="breadcrumb-item active">Serial Number</li>
+                </ol>
+            </nav>
+
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <img src="{{ drone.image_url }}" alt="{{ drone.name }}"
+                     style="width:60px;height:60px;object-fit:cover;border-radius:8px;"
+                     onerror="this.src='https://placehold.co/60x60/1a1a3e/ffffff?text=D'">
+                <div>
+                    <h4 class="fw-bold mb-0"><i class="bi bi-upc-scan me-2"></i>Serial Number</h4>
+                    <p class="text-muted mb-0">{{ drone.name }} — {{ drone.brand }} {{ drone.model }}</p>
+                </div>
+            </div>
+
+            <div class="card" style="max-width: 600px;">
+                <div class="card-header">
+                    <small class="text-muted">Data serial number akan otomatis muncul di form BAST saat serah terima</small>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row g-3">
+                            <!-- Nomor Registrasi -->
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-card-checklist me-1 text-danger"></i> Nomor Registrasi Drone
+                                    <span class="badge bg-danger ms-1">Wajib</span>
+                                </label>
+                                <input type="text" name="registration_number" class="form-control"
+                                       placeholder="Contoh: REG-DJIMAVIC3-2024-001"
+                                       value="{{ drone.registration_number or '' }}">
+                                <small class="text-muted">Nomor registrasi resmi dari DJPU/Kementerian Perhubungan</small>
+                            </div>
+
+                            <!-- Serial Drone Body -->
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-drone me-1 text-primary"></i> Serial Drone Body
+                                </label>
+                                <input type="text" name="serial_drone" class="form-control"
+                                       placeholder="Contoh: SN-DJI-MAVIC3-001"
+                                       value="{{ drone.serial_drone or '' }}">
+                            </div>
+
+                            <!-- Serial Remote -->
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-reception-4 me-1 text-info"></i> Serial Remote / Controller
+                                </label>
+                                <input type="text" name="serial_remote" class="form-control"
+                                       placeholder="Contoh: SN-RC-MAVIC3-001"
+                                       value="{{ drone.serial_remote or '' }}">
+                            </div>
+
+                            <div class="col-12"><hr class="border-secondary my-1"><small class="text-muted">Battery</small></div>
+
+                            <!-- Serial Battery 1 -->
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-battery-full me-1 text-success"></i> Serial Battery 1
+                                </label>
+                                <input type="text" name="serial_battery_1" class="form-control"
+                                       placeholder="Contoh: SN-BAT1-MAVIC3-001"
+                                       value="{{ drone.serial_battery_1 or '' }}">
+                            </div>
+
+                            <!-- Serial Battery 2 -->
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-battery-full me-1 text-success"></i> Serial Battery 2
+                                    <span class="text-muted fw-normal">(opsional)</span>
+                                </label>
+                                <input type="text" name="serial_battery_2" class="form-control"
+                                       placeholder="Contoh: SN-BAT2-MAVIC3-001"
+                                       value="{{ drone.serial_battery_2 or '' }}">
+                            </div>
+
+                            <!-- Serial Battery 3 -->
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-battery-full me-1 text-success"></i> Serial Battery 3
+                                    <span class="text-muted fw-normal">(opsional)</span>
+                                </label>
+                                <input type="text" name="serial_battery_3" class="form-control"
+                                       placeholder="Contoh: SN-BAT3-MAVIC3-001"
+                                       value="{{ drone.serial_battery_3 or '' }}">
+                            </div>
+
+                            <div class="col-12 mt-2">
+                                <hr class="border-secondary">
+                                <button type="submit" class="btn btn-primary px-4">
+                                    <i class="bi bi-save me-1"></i> Simpan Serial Number
+                                </button>
+                                <a href="{{ url_for('admin.drones') }}" class="btn btn-outline-secondary ms-2">Batal</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

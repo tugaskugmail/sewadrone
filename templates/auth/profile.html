@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Profil Saya — SewaDroneCilegonBanten{% endblock %}
+
+{% block content %}
+<section class="container mt-4">
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        <div class="mx-auto bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
+                            <i class="bi bi-person-circle text-primary" style="font-size: 3rem;"></i>
+                        </div>
+                    </div>
+                    <h5 class="fw-bold">{{ user.full_name }}</h5>
+                    <p class="text-muted">@{{ user.username }}</p>
+                    {% if user.is_admin %}
+                    <span class="badge bg-warning bg-opacity-25 text-warning">Admin</span>
+                    {% endif %}
+                    <hr class="border-secondary">
+                    <div class="text-start small">
+                        <div class="mb-2"><i class="bi bi-envelope me-2"></i>{{ user.email }}</div>
+                        <div class="mb-2"><i class="bi bi-phone me-2"></i>{{ user.phone or '-' }}</div>
+                        <div class="mb-2"><i class="bi bi-calendar me-2"></i>Bergabung {{ user.created_at.strftime('%d/%m/%Y') }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-4"><i class="bi bi-pencil me-2"></i>Edit Profil</h5>
+                    <form method="POST" action="{{ url_for('auth.profile_update') }}">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Nama Lengkap</label>
+                                <input type="text" name="full_name" class="form-control" value="{{ user.full_name }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Username</label>
+                                <input type="text" class="form-control" value="{{ user.username }}" disabled>
+                                <small class="text-muted">Tidak bisa diubah</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" value="{{ user.email }}" disabled>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">No. Telepon</label>
+                                <input type="text" name="phone" class="form-control" value="{{ user.phone or '' }}">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Alamat</label>
+                                <textarea name="address" class="form-control" rows="3">{{ user.address or '' }}</textarea>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save me-1"></i> Simpan Perubahan
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-clock-history me-2"></i>Aktivitas Terakhir</h5>
+                    {% set recent = user.bookings[:5] %}
+                    {% if recent %}
+                    <div class="timeline">
+                        {% for b in recent %}
+                        <div class="timeline-item">
+                            <strong>{{ b.drone.name }}</strong>
+                            <span class="badge bg-{{ b.status_color }} bg-opacity-25 text-{{ b.status_color }} ms-2">{{ b.status_label }}</span>
+                            <div class="text-muted small">{{ b.start_date.strftime('%d/%m/%Y') }} - {{ b.end_date.strftime('%d/%m/%Y') }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">Belum ada aktivitas booking.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

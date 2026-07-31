@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+{% extends "base.html" %}
+
+{% block title %}Berita Acara Serah Terima{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.my_bookings') }}">My Bookings</a></li>
+            <li class="breadcrumb-item active">BAST Serah Terima</li>
+        </ol>
+    </nav>
+
+    <div class="card bg-dark border-primary mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <div>
+                <h4 class="mb-0">📋 Berita Acara Serah Terima Drone</h4>
+                <small>No: {{ handover.document_number if handover.document_number else 'Menunggu...' }}</small>
+            </div>
+            <span class="badge bg-warning">{{ booking.status_label }}</span>
+        </div>
+        <div class="card-body">
+            <!-- Info -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h6 class="text-warning">👤 Data Anda</h6>
+                    <table class="table table-dark table-sm">
+                        <tr><td>Nama</td><td>{{ current_user.full_name }}</td></tr>
+                        <tr><td>NIK</td><td>{{ current_user.nik or '-' }}</td></tr>
+                        <tr><td>HP</td><td>{{ current_user.phone or '-' }}</td></tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="text-warning">🚁 Data Drone</h6>
+                    <table class="table table-dark table-sm">
+                        <tr><td>Drone</td><td>{{ booking.drone.name }}</td></tr>
+                        <tr><td>Merk</td><td>{{ booking.drone.brand }}</td></tr>
+                        <tr><td>Tanggal Sewa</td><td>{{ booking.start_date }} s/d {{ booking.end_date }}</td></tr>
+                        <tr><td>Total Biaya</td><td>Rp {{ "{:,}".format(booking.total_price) }}</td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Serial Numbers -->
+            <div class="card bg-secondary mb-4">
+                <div class="card-header">🔢 Serial Number</div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4"><strong>Drone:</strong> {{ handover.serial_drone or '-' }}</div>
+                        <div class="col-md-4"><strong>Remote:</strong> {{ handover.serial_remote or '-' }}</div>
+                        <div class="col-md-4"><strong>Jam Keluar:</strong> {{ handover.handover_time_out or '-' }}</div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-md-4">Battery 1: {{ handover.serial_battery_1 or '-' }}</div>
+                        <div class="col-md-4">Battery 2: {{ handover.serial_battery_2 or '-' }}</div>
+                        <div class="col-md-4">Battery 3: {{ handover.serial_battery_3 or '-' }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Checklist Kelengkapan -->
+            <div class="card bg-secondary mb-4">
+                <div class="card-header">📦 Checklist Kelengkapan</div>
+                <div class="card-body">
+                    <table class="table table-dark table-bordered">
+                        <thead>
+                            <tr><th>Item</th><th>Qty</th><th>Kondisi</th><th>Catatan</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for item in equipment_list %}
+                            <tr>
+                                <td>{{ item.item }}</td>
+                                <td>{{ item.qty }}</td>
+                                <td>
+                                    {% if item.condition == 'baik' %}
+                                        <span class="badge bg-success">Baik</span>
+                                    {% elif item.condition == 'rusak' %}
+                                        <span class="badge bg-danger">Rusak</span>
+                                    {% elif item.condition == 'hilang' %}
+                                        <span class="badge bg-warning">Hilang</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ item.notes or '-' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Checklist Kondisi -->
+            <div class="card bg-secondary mb-4">
+                <div class="card-header">🔧 Kondisi Drone</div>
+                <div class="card-body">
+                    <table class="table table-dark table-bordered">
+                        <thead>
+                            <tr><th>Item</th><th>Status</th><th>Catatan</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for item in condition_list %}
+                            <tr>
+                                <td>{{ item.item }}</td>
+                                <td>
+                                    {% if item.status == 'ok' %}
+                                        <span class="badge bg-success">OK</span>
+                                    {% elif item.status == 'warning' %}
+                                        <span class="badge bg-warning">Warning</span>
+                                    {% elif item.status == 'error' %}
+                                        <span class="badge bg-danger">Error</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ item.notes or '-' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Catatan -->
+            {% if handover.notes_damage %}
+            <div class="alert alert-warning">
+                <strong>⚠️ Catatan:</strong> {{ handover.notes_damage }}
+            </div>
+            {% endif %}
+
+            <!-- Foto -->
+            <div class="mb-4">
+                <span class="badge bg-info">📷 Foto Saat Keluar: {{ 'Terlampir' if handover.photo_out_attached else 'Tidak' }}</span>
+            </div>
+
+            <!-- Tombol Terima -->
+            {% if booking.status == 'confirmed' %}
+            <div class="alert alert-info">
+                <h5>📨 Silakan Terima Drone Anda</h5>
+                <p>Jika semua kelengkapan dan kondisi drone sesuai, silakan konfirmasi penerimaan di bawah ini.</p>
+                <a href="{{ url_for('main.accept_handover', booking_id=booking.id) }}" class="btn btn-success btn-lg" onclick="return confirm('Yakin ingin menerima drone ini?')">
+                    ✅ Terima Drone & Mulai Sewa
+                </a>
+            </div>
+            {% elif booking.status == 'active' %}
+            <div class="alert alert-success">
+                <h5>✅ Drone Sudah Diterima</h5>
+                <p>Anda telah menerima drone pada: {{ handover.user_accepted_at.strftime('%d %B %Y %H:%M') if handover.user_accepted_at else '-' }}</p>
+                <p>Status booking: <span class="badge bg-primary">Sedang Berlangsung</span></p>
+            </div>
+            {% endif %}
+
+            <a href="{{ url_for('main.my_bookings') }}" class="btn btn-secondary">← Kembali ke Bookings</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

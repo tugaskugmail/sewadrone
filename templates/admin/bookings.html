@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block title %}Kelola Booking — SewaDroneCilegonBanten Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+    <div class="row">
+        <div class="col-lg-2 col-md-3 p-0">
+            <div class="admin-sidebar p-3">
+                <h6 class="fw-bold text-muted text-uppercase small mb-3">
+                    <i class="bi bi-shield-lock me-2"></i>Admin Panel
+                </h6>
+                <nav class="nav flex-column">
+                    <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                    <a class="nav-link" href="{{ url_for('admin.drones') }}">
+                        <i class="bi bi-drone"></i> Drone
+                    </a>
+                    <a class="nav-link active" href="{{ url_for('admin.bookings') }}">
+                        <i class="bi bi-calendar-check"></i> Bookings
+                    </a>
+                    <a class="nav-link" href="{{ url_for('admin.users') }}">
+                        <i class="bi bi-people"></i> Users
+                    </a>
+                    {% if current_user.is_superadmin %}
+                    <a class="nav-link {% if request.endpoint == 'admin.report' %}active{% endif %}" href="{{ url_for('admin.report') }}">
+                        <i class="bi bi-bar-chart-line"></i> Report
+                    </a>
+                    {% endif %}
+                    <hr class="border-secondary">
+                    <a class="nav-link text-muted" href="{{ url_for('main.index') }}">
+                        <i class="bi bi-arrow-left"></i> Ke Website
+                    </a>
+                </nav>
+            </div>
+        </div>
+        <div class="col-lg-10 col-md-9 p-4">
+            <h4 class="fw-bold mb-4"><i class="bi bi-calendar-check me-2"></i>Kelola Booking</h4>
+
+            <!-- Filter -->
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <a href="{{ url_for('admin.bookings') }}" class="btn btn-sm {% if not request.args.get('status') %}btn-primary{% else %}btn-outline-secondary{% endif %}">Semua</a>
+                {% for s, label, color in [('pending','Pending','warning'),('confirmed','Confirmed','info'),('active','Active','primary'),('completed','Completed','success'),('cancelled','Cancelled','danger')] %}
+                <a href="{{ url_for('admin.bookings', status=s) }}" class="btn btn-sm {% if request.args.get('status') == s %}btn-{{ color }}{% else %}btn-outline-secondary{% endif %}">{{ label }}</a>
+                {% endfor %}
+            </div>
+
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    {% set cols = [
+                                        ('id','ID'),
+                                        ('user','User'),
+                                        ('drone','Drone'),
+                                        ('start_date','Tanggal'),
+                                        ('total_days','Durasi'),
+                                        ('total_price','Total'),
+                                        ('status','Status')
+                                    ] %}
+                                    {% for key, label in cols %}
+                                    {% set next_order = 'asc' if (current_sort == key and current_order == 'desc') else 'desc' %}
+                                    <th>
+                                        <a href="{{ url_for('admin.bookings', sort=key, order=next_order, status=request.args.get('status','')) }}"
+                                           class="text-decoration-none {% if current_sort == key %}text-white{% else %}text-secondary{% endif %}">
+                                            {{ label }}
+                                            {% if current_sort == key %}
+                                            <i class="bi bi-arrow-{% if current_order == 'asc' %}up{% else %}down{% endif %}-short ms-1"></i>
+                                            {% else %}
+                                            <i class="bi bi-arrow-down-up ms-1 opacity-25"></i>
+                                            {% endif %}
+                                        </a>
+                                    </th>
+                                    {% endfor %}
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for b in bookings %}
+                                <tr>
+                                    <td>#{{ b.id }}</td>
+                                    <td>
+                                        {{ b.user.full_name }}<br>
+                                        <small class="text-muted">@{{ b.user.username }}</small><br>
+                                        {% if b.user.phone %}
+                                        <small class="text-success">
+                                            <i class="bi bi-telephone"></i>
+                                            <a href="tel:{{ b.user.phone }}" class="text-success text-decoration-none">{{ b.user.phone }}</a>
+                                        </small>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ b.drone.name[:25] }}</td>
+                                    <td><small>{{ b.start_date.strftime('%d/%m/%Y') }} - {{ b.end_date.strftime('%d/%m/%Y') }}</small></td>
+                                    <td>{{ b.total_days }} hari</td>
+                                    <td>Rp {{ "{:,.0f}".format(b.total_price) }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ b.status_color }} bg-opacity-25 text-{{ b.status_color }} badge-status">
+                                            {{ b.status_label }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex gap-1 flex-wrap">
+                                            {% if b.status == 'pending' %}
+                                            <form method="POST" action="{{ url_for('admin.booking_update_status', booking_id=b.id) }}">
+                                                <input type="hidden" name="booking_id" value="{{ b.id }}">
+                                                <button name="status" value="confirmed" class="btn btn-sm btn-outline-info" title="Konfirmasi">
+                                                    <i class="bi bi-check-lg"></i>
+                                                </button>
+                                            </form>
+                                            {% elif b.status == 'confirmed' %}
+                                            <a href="{{ url_for('admin.handover_create', booking_id=b.id) }}" class="btn btn-sm btn-outline-warning" title="BAST Serah Terima">
+                                                📋 Keluar
+                                            </a>
+                                            {% elif b.status == 'active' %}
+                                            <a href="{{ url_for('admin.handover_create', booking_id=b.id) }}" class="btn btn-sm btn-outline-warning" title="Lihat BAST Serah Terima">
+                                                📋 BAST
+                                            </a>
+                                            <a href="{{ url_for('admin.return_create', booking_id=b.id) }}" class="btn btn-sm btn-outline-success" title="BAST Pengembalian">
+                                                📥 Kembali
+                                            </a>
+                                            {% elif b.status in ['completed'] %}
+                                            <a href="{{ url_for('admin.handover_create', booking_id=b.id) }}" class="btn btn-sm btn-outline-secondary" title="Lihat BAST">
+                                                📋 BAST
+                                            </a>
+                                            {% endif %}
+                                            <!-- Tombol Hapus (Superadmin only) -->
+                                            {% if current_user.is_superadmin %}
+                                            <form method="POST" action="{{ url_for('admin.booking_delete', booking_id=b.id) }}"
+                                                  onsubmit="return confirm('Hapus booking #{{ b.id }}? Semua data BAST juga akan terhapus!')">
+                                                <button type="submit" class="btn btn-sm btn-danger" title="Hapus Booking">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                            {% if b.handover_record %}
+                                            <a href="{{ url_for('admin.bast_pdf', booking_id=b.id) }}" target="_blank" class="btn btn-sm btn-outline-light" title="Download PDF BAST">
+                                                💾 PDF
+                                            </a>
+                                            {% endif %}
+                                            {% if b.return_record %}
+                                            <a href="{{ url_for('admin.return_pdf', booking_id=b.id) }}" target="_blank" class="btn btn-sm btn-outline-light" title="Download PDF Pengembalian">
+                                                📄 PDF Kembali
+                                            </a>
+                                            {% endif %}
+                                            {% if b.status in ['pending', 'confirmed', 'active'] %}
+                                            <form method="POST" action="{{ url_for('admin.booking_update_status', booking_id=b.id) }}">
+                                                <input type="hidden" name="booking_id" value="{{ b.id }}">
+                                                <button name="status" value="cancelled" class="btn btn-sm btn-outline-danger" title="Batalkan"
+                                                        onclick="return confirm('Batalkan booking #{{ b.id }}?')">
+                                                    <i class="bi bi-x-lg"></i>
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-5">
+                                        <i class="bi bi-calendar-x" style="font-size: 3rem;"></i>
+                                        <p class="mt-2">Tidak ada booking</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

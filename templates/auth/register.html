@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% block title %}Daftar — SewaDroneCilegonBanten{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+            <div class="card">
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-drone text-primary" style="font-size: 3rem;"></i>
+                        <h4 class="fw-bold mt-2">Daftar Akun</h4>
+                        <p class="text-muted">Mulai sewa drone sekarang! Upload KTP & tanda tangan untuk verifikasi.</p>
+                    </div>
+
+                    <form method="POST" action="{{ url_for('auth.register') }}" enctype="multipart/form-data" id="registerForm">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
+                                <input type="text" name="full_name" class="form-control" placeholder="Nama sesuai KTP" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Username <span class="text-danger">*</span></label>
+                                <input type="text" name="username" class="form-control" placeholder="Username" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Email <span class="text-danger">*</span></label>
+                                <input type="email" name="email" class="form-control" placeholder="email@example.com" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">No. Telepon</label>
+                                <input type="text" name="phone" class="form-control" placeholder="0812xxxxxx">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">NIK (No. KTP) <span class="text-danger">*</span></label>
+                                <input type="text" name="nik" class="form-control" placeholder="1234567890123456" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Alamat <span class="text-danger">*</span></label>
+                                <textarea name="address" class="form-control" rows="2" placeholder="Alamat sesuai KTP" required></textarea>
+                            </div>
+                            
+                            <!-- Upload KTP -->
+                            <div class="col-12">
+                                <label class="form-label">Foto KTP <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="file" name="ktp_image" class="form-control" id="ktpInput" accept="image/*,.pdf" required>
+                                </div>
+                                <small class="text-muted">Upload foto KTP (format: JPG, PNG, PDF)</small>
+                                <div class="mt-2" id="ktpPreview" style="display:none;">
+                                    <img id="ktpImg" style="max-width: 200px; border-radius: 8px; border: 2px solid #0d6efd;">
+                                </div>
+                            </div>
+                            
+                            <!-- Signature Pad -->
+                            <div class="col-12">
+                                <label class="form-label">Tanda Tangan <span class="text-danger">*</span></label>
+                                <div class="signature-container p-2 border rounded" style="background: #fff;">
+                                    <canvas id="signaturePad" width="500" height="150" style="border: 1px dashed #ccc; width: 100%;"></canvas>
+                                </div>
+                                <div class="d-flex gap-2 mt-2">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearSignature()">
+                                        <i class="bi bi-arrow-counterclockwise"></i> Clear
+                                    </button>
+                                </div>
+                                <small class="text-muted">Silakan tanda tangan di box di atas</small>
+                                <input type="hidden" name="signature" id="signatureInput">
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Password <span class="text-danger">*</span></label>
+                                <input type="password" name="password" class="form-control" placeholder="Min 6 karakter" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Konfirmasi Password <span class="text-danger">*</span></label>
+                                <input type="password" name="confirm_password" class="form-control" placeholder="Ulangi password" required>
+                            </div>
+                            
+                            <!-- Warning -->
+                            <div class="col-12">
+                                <div class="alert alert-warning py-2">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                    <strong>Wajib:</strong> Upload KTP & tanda tangan sebelum dapat daftar
+                                </div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary w-100 btn-lg" id="submitBtn" disabled>
+                                    <i class="bi bi-person-plus me-1"></i> Daftar Sekarang
+                                </button>
+                                <small class="text-muted d-block text-center mt-2" id="submitStatus">
+                                    ⚠️ Upload KTP & tanda tangan terlebih dahulu
+                                </small>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="text-center mt-3">
+                        <small class="text-muted">Sudah punya akun? <a href="{{ url_for('auth.login') }}" class="text-primary">Masuk</a></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Signature Pad
+const canvas = document.getElementById('signaturePad');
+const ctx = canvas.getContext('2d');
+let isDrawing = false;
+let hasSignature = false;
+
+// Set canvas size based on display
+function resizeCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = 150;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+ctx.strokeStyle = '#000';
+ctx.lineWidth = 2;
+ctx.lineCap = 'round';
+
+function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX || e.touches[0].clientX) - rect.left;
+    const y = (e.clientY || e.touches[0].clientY) - rect.top;
+    return { x: x * (canvas.width / rect.width), y: y * (canvas.height / rect.height) };
+}
+
+canvas.addEventListener('mousedown', (e) => { isDrawing = true; const pos = getPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); });
+canvas.addEventListener('mousemove', (e) => { if (!isDrawing) return; const pos = getPos(e); ctx.lineTo(pos.x, pos.y); ctx.stroke(); hasSignature = true; checkForm(); });
+canvas.addEventListener('mouseup', () => { isDrawing = false; });
+canvas.addEventListener('mouseout', () => { isDrawing = false; });
+
+canvas.addEventListener('touchstart', (e) => { e.preventDefault(); isDrawing = true; const pos = getPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); });
+canvas.addEventListener('touchmove', (e) => { e.preventDefault(); if (!isDrawing) return; const pos = getPos(e); ctx.lineTo(pos.x, pos.y); ctx.stroke(); hasSignature = true; checkForm(); });
+canvas.addEventListener('touchend', () => { isDrawing = false; });
+
+function clearSignature() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    hasSignature = false;
+    checkForm();
+}
+
+function checkForm() {
+    const ktpFile = document.getElementById('ktpInput').files.length > 0;
+    const btn = document.getElementById('submitBtn');
+    const status = document.getElementById('submitStatus');
+    
+    if (ktpFile && hasSignature) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-person-plus me-1"></i> Daftar Sekarang';
+        status.innerHTML = '✅ Semua persyaratan lengkap!';
+        status.className = 'text-success d-block text-center mt-2';
+    } else {
+        btn.disabled = true;
+        status.innerHTML = '⚠️ Upload KTP & tanda tangan terlebih dahulu';
+        status.className = 'text-muted d-block text-center mt-2';
+    }
+}
+
+// Preview KTP
+document.getElementById('ktpInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('ktpImg').src = e.target.result;
+            document.getElementById('ktpPreview').style.display = 'block';
+            checkForm();
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Submit form - save signature
+document.getElementById('registerForm').addEventListener('submit', function(e) {
+    if (!hasSignature) {
+        e.preventDefault();
+        alert('Silakan tanda tangan terlebih dahulu!');
+        return;
+    }
+    document.getElementById('signatureInput').value = canvas.toDataURL('image/png');
+});
+</script>
+{% endblock %}

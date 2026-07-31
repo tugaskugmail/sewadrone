@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+{% extends "base.html" %}
+
+{% block title %}Berita Acara Pengembalian - Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('admin.bookings') }}">Bookings</a></li>
+            <li class="breadcrumb-item active">BAST Pengembalian</li>
+        </ol>
+    </nav>
+
+    <div class="card bg-dark border-success mb-4">
+        <div class="card-header bg-success text-white">
+            <h4 class="mb-0">📋 Berita Acara Pengembalian Drone</h4>
+            <small>Booking #{{ booking.id }} - {{ booking.drone.name }}</small>
+        </div>
+        <div class="card-body">
+            <form method="POST" enctype="multipart/form-data">
+                <!-- Info Penyewa & Drone -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="text-warning mb-3">👤 Data Penyewa</h6>
+                        <table class="table table-dark table-sm">
+                            <tr><td><strong>Nama</strong></td><td>{{ booking.user.full_name }}</td></tr>
+                            <tr><td><strong>HP</strong></td><td>{{ booking.user.phone or '-' }}</td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-warning mb-3">🚁 Data Sewa</h6>
+                        <table class="table table-dark table-sm">
+                            <tr><td><strong>Drone</strong></td><td>{{ booking.drone.name }}</td></tr>
+                            <tr><td><strong>Tanggal Sewa</strong></td><td>{{ booking.start_date }} s/d {{ booking.end_date }}</td></tr>
+                            <tr><td><strong>Total Biaya</strong></td><td>Rp {{ "{:,}".format(booking.total_price) }}</td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Jam Pengembalian -->
+                <div class="card bg-secondary mb-4">
+                    <div class="card-header">⏰ Waktu Pengembalian</div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label>Jam Kembali</label>
+                                <input type="time" name="return_time_in" class="form-control"
+                                       value="{{ return_record.return_time_in if return_record and return_record.return_time_in else '' }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Checklist Kelengkapan Saat Kembali -->
+                <div class="card bg-secondary mb-4">
+                    <div class="card-header">📦 Checklist Kelengkapan (Saat Kembali)</div>
+                    <div class="card-body">
+                        <table class="table table-dark table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th style="width:80px">Qty</th>
+                                    <th>Kondisi</th>
+                                    <th>Catatan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% set items = [
+                                    ('drone_body', 'Drone Body'),
+                                    ('remote_controller', 'Remote Controller'),
+                                    ('battery', 'Battery'),
+                                    ('charger', 'Charger'),
+                                    ('usb_cable', 'USB Cable'),
+                                    ('nd_filter', 'ND Filter'),
+                                    ('sd_card', 'microSD Card'),
+                                    ('propeller', 'Propeller Cadangan'),
+                                    ('hardcase', 'Hardcase'),
+                                    ('manual', 'Buku Manual')
+                                ] %}
+                                {% for item_id, item_name in items %}
+                                <tr>
+                                    <td>{{ item_name }}</td>
+                                    <td><input type="number" name="eq_{{ item_id }}_qty" class="form-control form-control-sm" value="1" min="0"></td>
+                                    <td>
+                                        <div class="d-flex gap-2 flex-wrap">
+                                            {% for val, label, bg, txt in [('baik','✓ Baik','#198754','#fff'),('rusak','⚠ Rusak','#ffc107','#000'),('hilang','✗ Hilang','#dc3545','#fff')] %}
+                                            <div class="form-check form-check-inline m-0">
+                                                <input class="form-check-input visually-hidden" type="radio"
+                                                       name="eq_{{ item_id }}_condition"
+                                                       id="ret_eq_{{ item_id }}_{{ val }}"
+                                                       value="{{ val }}"
+                                                       onchange="this.closest('div.d-flex').querySelectorAll('label').forEach(l=>l.style.opacity='0.45'); this.nextElementSibling.style.opacity='1'">
+                                                <label for="ret_eq_{{ item_id }}_{{ val }}"
+                                                       style="background:{{ bg }};color:{{ txt }};padding:2px 10px;border-radius:20px;font-size:0.8rem;font-weight:600;cursor:pointer;opacity:0.55;transition:opacity 0.15s;">
+                                                    {{ label }}
+                                                </label>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </td>
+                                    <td><input type="text" name="eq_{{ item_id }}_notes" class="form-control form-control-sm" placeholder="Catatan..."></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Checklist Kondisi Drone Saat Kembali -->
+                <div class="card bg-secondary mb-4">
+                    <div class="card-header">🔧 Pemeriksaan Kondisi Drone (Saat Kembali)</div>
+                    <div class="card-body">
+                        <table class="table table-dark table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Item Pemeriksaan</th>
+                                    <th>Status</th>
+                                    <th>Catatan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% set cond_items = [
+                                    ('body_frame', 'Body/Frame Drone'),
+                                    ('gimbal_camera', 'Gimbal & Kamera'),
+                                    ('obstacle_sensor', 'Sensor Obstacle'),
+                                    ('motor_propeller', 'Motor & Propeller'),
+                                    ('remote_connection', 'Koneksi Remote'),
+                                    ('battery_condition', 'Kondisi Battery'),
+                                    ('ready_to_fly', 'Ready to Fly')
+                                ] %}
+                                {% for item_id, item_name in cond_items %}
+                                <tr>
+                                    <td>{{ item_name }}</td>
+                                    <td>
+                                        <div class="d-flex gap-2 flex-wrap">
+                                            {% for val, label, bg, txt in [('ok','✓ OK','#198754','#fff'),('warning','⚠ Warning','#ffc107','#000'),('error','✗ Error','#dc3545','#fff')] %}
+                                            <div class="form-check form-check-inline m-0">
+                                                <input class="form-check-input visually-hidden" type="radio"
+                                                       name="cond_{{ item_id }}"
+                                                       id="ret_cond_{{ item_id }}_{{ val }}"
+                                                       value="{{ val }}"
+                                                       onchange="this.closest('div.d-flex').querySelectorAll('label').forEach(l=>l.style.opacity='0.45'); this.nextElementSibling.style.opacity='1'">
+                                                <label for="ret_cond_{{ item_id }}_{{ val }}"
+                                                       style="background:{{ bg }};color:{{ txt }};padding:2px 10px;border-radius:20px;font-size:0.8rem;font-weight:600;cursor:pointer;opacity:0.55;transition:opacity 0.15s;">
+                                                    {{ label }}
+                                                </label>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </td>
+                                    <td><input type="text" name="cond_{{ item_id }}_notes" class="form-control form-control-sm" placeholder="Catatan..."></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Kerusakan & Deposit -->
+                <div class="card bg-secondary mb-4">
+                    <div class="card-header">💰 Kerusakan & Deposit</div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label>Catatan Kerusakan</label>
+                                <textarea name="notes_damage" class="form-control" rows="3"
+                                          placeholder="Catatan kerusakan...">{{ return_record.notes_damage if return_record and return_record.notes_damage else '' }}</textarea>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label>Deskripsi Kerusakan</label>
+                                <textarea name="damage_description" class="form-control" rows="3"
+                                          placeholder="Detail kerusakan...">{{ return_record.damage_description if return_record and return_record.damage_description else '' }}</textarea>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label>Biaya Perbaikan (Rp)</label>
+                                <input type="number" name="damage_cost" class="form-control"
+                                       value="{{ return_record.damage_cost if return_record and return_record.damage_cost else 0 }}" min="0">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label>Potongan Deposit (Rp)</label>
+                                <input type="number" name="deposit_deducted" class="form-control"
+                                       value="{{ return_record.deposit_deducted if return_record and return_record.deposit_deducted else 0 }}" min="0">
+                            </div>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="deposit_returned"
+                                   id="depositReturned"
+                                   {% if return_record and return_record.deposit_returned %}checked{% endif %}>
+                            <label class="form-check-label" for="depositReturned">
+                                ✅ Deposit dikembalikan penuh
+                            </label>
+                        </div>
+
+                        <!-- Upload Foto Galeri Pengembalian -->
+                        {% from 'macros/photo_gallery.html' import photo_upload %}
+                        {{ photo_upload('photo_return_file', '📷 Upload Foto Pengembalian (Bukti Kondisi)', return_record.photo_return_urls if return_record else None) }}
+                    </div>
+                </div>
+
+                <!-- Tanda Tangan -->
+                <div class="card bg-secondary mb-4">
+                    <div class="card-header">✍️ Tanda Tangan</div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">📅 Tanggal Pengembalian</label>
+                                <input type="text" id="returnDate" class="form-control" readonly
+                                       style="background:#2a2a3e; color:#fff; border-color:#6c757d;">
+                            </div>
+                        </div>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Tanda Tangan Admin</label>
+                                <div class="border rounded p-2" style="background:#1a1a2e;">
+                                    <canvas id="adminSignaturePad" width="320" height="130"
+                                            style="background:#fff; border-radius:4px; display:block; cursor:crosshair; touch-action:none;"></canvas>
+                                    <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="clearAdminSig">
+                                        <i class="bi bi-eraser me-1"></i>Hapus
+                                    </button>
+                                </div>
+                                <input type="hidden" name="admin_signature" id="adminSigData"
+                                       value="{{ return_record.admin_signature if return_record and return_record.admin_signature else '' }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Tanda Tangan Penyewa</label>
+                                <div class="border rounded p-2" style="background:#1a1a2e;">
+                                    <canvas id="userSignaturePad" width="320" height="130"
+                                            style="background:#fff; border-radius:4px; display:block; cursor:crosshair; touch-action:none;"></canvas>
+                                    <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="clearUserSig">
+                                        <i class="bi bi-eraser me-1"></i>Hapus
+                                    </button>
+                                </div>
+                                <input type="hidden" name="user_signature" id="userSigData"
+                                       value="{{ return_record.user_signature if return_record and return_record.user_signature else '' }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tombol -->
+                <div class="d-flex gap-2 flex-wrap">
+                    <button type="submit" class="btn btn-success btn-lg">
+                        ✅ Selesaikan Booking & Kembalikan Deposit
+                    </button>
+                    {% if return_record %}
+                    <a href="{{ url_for('admin.return_pdf', booking_id=booking.id) }}" target="_blank" class="btn btn-outline-light btn-lg">
+                        💾 Simpan PDF
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('admin.bookings') }}" class="btn btn-secondary btn-lg">Batal</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Preview foto yang diupload
+document.getElementById('photoReturnFile').addEventListener('change', function(e) {
+    const container = document.getElementById('photoPreviewContainer');
+    container.innerHTML = '';
+    Array.from(e.target.files).forEach(function(file) {
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            const img = document.createElement('img');
+            img.src = ev.target.result;
+            img.style.cssText = 'width:100px;height:100px;object-fit:cover;border-radius:8px;border:2px solid #198754;';
+            container.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+    });
+    // Auto-check checkbox kalau ada file
+    if (e.target.files.length > 0) {
+        document.getElementById('photoReturn').checked = true;
+    }
+});
+
+// Auto-fill tanggal
+document.getElementById('returnDate').value = new Date().toLocaleDateString('id-ID', {
+    day: '2-digit', month: 'long', year: 'numeric'
+});
+
+// Signature pad factory
+function makeSignaturePad(canvasId, hiddenId, clearBtnId, existingData) {
+    const canvas = document.getElementById(canvasId);
+    const hidden = document.getElementById(hiddenId);
+    const ctx = canvas.getContext('2d');
+    let drawing = false, lastX = 0, lastY = 0;
+
+    if (existingData) {
+        const img = new Image();
+        img.onload = () => ctx.drawImage(img, 0, 0);
+        img.src = existingData;
+    }
+
+    function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const src = e.touches ? e.touches[0] : e;
+        return [src.clientX - rect.left, src.clientY - rect.top];
+    }
+    function startDraw(e) { e.preventDefault(); drawing = true; [lastX, lastY] = getPos(e); }
+    function endDraw() { drawing = false; hidden.value = canvas.toDataURL('image/png'); }
+    function draw(e) {
+        if (!drawing) return;
+        e.preventDefault();
+        const [x, y] = getPos(e);
+        ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(x, y);
+        ctx.strokeStyle = '#1a1a2e'; ctx.lineWidth = 2;
+        ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
+        [lastX, lastY] = [x, y];
+        hidden.value = canvas.toDataURL('image/png');
+    }
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mouseup', endDraw);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('touchstart', startDraw, { passive: false });
+    canvas.addEventListener('touchend', endDraw);
+    canvas.addEventListener('touchmove', draw, { passive: false });
+
+    document.getElementById(clearBtnId).addEventListener('click', function() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        hidden.value = '';
+    });
+}
+
+makeSignaturePad('adminSignaturePad', 'adminSigData', 'clearAdminSig',
+    document.getElementById('adminSigData').value || null);
+makeSignaturePad('userSignaturePad', 'userSigData', 'clearUserSig',
+    document.getElementById('userSigData').value || null);
+</script>
+{% endblock %}

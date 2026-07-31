@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block title %}{{ drone.name }} — SewaDroneCilegonBanten{% endblock %}
+
+{% block content %}
+<section class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}" class="text-muted">Beranda</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('main.drones') }}" class="text-muted">Drone</a></li>
+            <li class="breadcrumb-item active">{{ drone.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        <!-- IMAGE -->
+        <div class="col-lg-6">
+            <div class="drone-image-container">
+                <img src="{{ drone.image_url }}" alt="{{ drone.name }}" class="img-fluid p-4"
+                     style="max-height: 450px; object-fit: contain;"
+                     onerror="this.src='https://placehold.co/600x400/1a1a3e/ffffff?text={{ drone.name|urlencode }}'">
+            </div>
+            {% if drone.images %}
+            <div class="d-flex gap-2 mt-2">
+                {% for img in drone.images[:4] %}
+                <img src="{{ img.image_url }}" class="rounded-3" style="width: 80px; height: 80px; object-fit: cover; cursor: pointer;">
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- INFO -->
+        <div class="col-lg-6">
+            <span class="badge bg-primary bg-opacity-25 text-primary mb-2">{{ drone.category }}</span>
+            <h1 class="fw-bold">{{ drone.name }}</h1>
+            <p class="text-muted">{{ drone.brand }} {{ drone.model }}</p>
+            <div class="stars mb-3">
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <span class="text-muted ms-2">4.9 (120+ ulasan)</span>
+            </div>
+
+            <p class="mb-4">{{ drone.description }}</p>
+
+            <!-- HIGHLIGHTS -->
+            <div class="row g-2 mb-4">
+                <div class="col-6">
+                    <div class="spec-item">
+                        <small class="text-muted">Harga Sewa</small>
+                        <div class="fw-bold text-primary">Rp {{ "{:,.0f}".format(drone.daily_rate) }} <small class="fw-normal text-muted">/hari</small></div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="spec-item">
+                        <small class="text-muted">Deposit</small>
+                        <div class="fw-bold">Rp {{ "{:,.0f}".format(drone.deposit) }}</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="spec-item">
+                        <small class="text-muted">Stok Tersedia</small>
+                        <div class="fw-bold">{{ drone.stock }} unit</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="spec-item">
+                        <small class="text-muted">Kategori</small>
+                        <div class="fw-bold">{{ drone.category }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CTA -->
+            {% if drone.is_available and drone.stock > 0 %}
+            <a href="{{ url_for('main.booking', drone_id=drone.id) }}" class="btn btn-glow btn-lg w-100 mb-2">
+                <i class="bi bi-calendar-check me-2"></i>Sewa Drone Ini
+            </a>
+            {% else %}
+            <button class="btn btn-secondary btn-lg w-100 mb-2" disabled>
+                <i class="bi bi-x-circle me-2"></i>Drone Tidak Tersedia
+            </button>
+            {% endif %}
+            <p class="text-muted small text-center">
+                <i class="bi bi-shield-check me-1"></i>Garansi kerusakan & asuransi tersedia
+            </p>
+
+            <!-- QUICK BOOK -->
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3"><i class="bi bi-lightning me-2"></i>Quick Booking</h6>
+                    <form action="{{ url_for('main.booking', drone_id=drone.id) }}" method="GET">
+                        <div class="row g-2">
+                            <div class="col-5">
+                                <input type="date" name="start_date" class="form-control form-control-sm" required>
+                            </div>
+                            <div class="col-5">
+                                <input type="date" name="end_date" class="form-control form-control-sm" required>
+                            </div>
+                            <div class="col-2">
+                                <button type="submit" class="btn btn-primary btn-sm w-100">Cek</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SPESIFIKASI -->
+    <div class="row mt-5">
+        <div class="col-lg-8">
+            <h3 class="fw-bold mb-3">Spesifikasi Detail</h3>
+            <div class="card">
+                <div class="card-body">
+                    {% if drone.specs %}
+                    {% for line in drone.specs.split('\n') %}
+                    <div class="row py-2 {% if not loop.last %}border-bottom border-secondary{% endif %}">
+                        {% if ':' in line %}
+                        {% set parts = line.split(':', 1) %}
+                        <div class="col-4 text-muted">{{ parts[0].strip() }}</div>
+                        <div class="col-8">{{ parts[1].strip() }}</div>
+                        {% else %}
+                        <div class="col-12">{{ line }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-muted">Belum ada spesifikasi detail.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <h3 class="fw-bold mb-3">Informasi Penting</h3>
+            <div class="card">
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Drone dalam kondisi prima</li>
+                        <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Baterai full + spare</li>
+                        <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Remote controller included</li>
+                        <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Koper pelindung</li>
+                        <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Buku panduan & tutorial</li>
+                        <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Support teknis via WA</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RELATED DRONES -->
+    {% if related_drones %}
+    <section class="mt-5">
+        <h3 class="fw-bold mb-4">Drone Serupa</h3>
+        <div class="row g-4">
+            {% for rd in related_drones %}
+            <div class="col-md-3 col-6">
+                <div class="card drone-card h-100">
+                    <img src="{{ rd.image_url }}" class="card-img-top" alt="{{ rd.name }}"
+                         style="height: 150px; object-fit: cover;"
+                         onerror="this.src='https://placehold.co/300x200/1a1a3e/ffffff?text={{ rd.name|urlencode }}'">
+                    <div class="card-body">
+                        <h6 class="fw-bold mb-1">{{ rd.name }}</h6>
+                        <div class="price-tag" style="font-size: 1.1rem;">Rp {{ "{:,.0f}".format(rd.daily_rate) }}</div>
+                        <small class="text-muted">/hari</small>
+                    </div>
+                    <a href="{{ url_for('main.drone_detail', drone_id=rd.id) }}" class="stretched-link"></a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+</section>
+{% endblock %}

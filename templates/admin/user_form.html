@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% block title %}{% if user %}Edit{% else %}Tambah{% endif %} User — Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+    <div class="row">
+        <div class="col-lg-2 col-md-3 p-0">
+            <div class="admin-sidebar p-3">
+                <h6 class="fw-bold text-muted text-uppercase small mb-3">
+                    <i class="bi bi-shield-lock me-2"></i>Admin Panel
+                </h6>
+                <nav class="nav flex-column">
+                    <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                    <a class="nav-link" href="{{ url_for('admin.drones') }}">
+                        <i class="bi bi-drone"></i> Drone
+                    </a>
+                    <a class="nav-link" href="{{ url_for('admin.bookings') }}">
+                        <i class="bi bi-calendar-check"></i> Bookings
+                    </a>
+                    <a class="nav-link" href="{{ url_for('admin.users') }}">
+                        <i class="bi bi-people"></i> Users
+                    </a>
+                    <hr class="border-secondary">
+                    <a class="nav-link text-muted" href="{{ url_for('main.index') }}">
+                        <i class="bi bi-arrow-left"></i> Ke Website
+                    </a>
+                </nav>
+            </div>
+        </div>
+        <div class="col-lg-10 col-md-9 p-4">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.users') }}">Users</a></li>
+                    <li class="breadcrumb-item active">{% if user %}Edit{% else %}Tambah{% endif %} User</li>
+                </ol>
+            </nav>
+
+            <h4 class="fw-bold mb-4">
+                <i class="bi bi-{% if user %}pencil{% else %}plus-circle{% endif %} me-2"></i>
+                {% if user %}Edit User{% else %}Tambah User Manual{% endif %}
+            </h4>
+
+            <div class="card" style="max-width: 600px;">
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
+                                <input type="text" name="full_name" class="form-control" 
+                                       value="{{ user.full_name if user else '' }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Username <span class="text-danger">*</span></label>
+                                <input type="text" name="username" class="form-control" 
+                                       value="{{ user.username if user else '' }}" 
+                                       {% if user %}readonly{% else %}required{% endif %}>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email <span class="text-danger">*</span></label>
+                                <input type="email" name="email" class="form-control" 
+                                       value="{{ user.email if user else '' }}" 
+                                       {% if user %}readonly{% else %}required{% endif %}>
+                            </div>
+                            
+                            {% if not user %}
+                            <div class="col-12">
+                                <label class="form-label">Password <span class="text-danger">*</span></label>
+                                <input type="password" name="password" class="form-control" placeholder="Min 6 karakter" required>
+                            </div>
+                            {% else %}
+                            <div class="col-12">
+                                <label class="form-label">Password Baru</label>
+                                <input type="password" name="new_password" class="form-control" placeholder="Kosongkan jika tidak ingin ganti">
+                                <small class="text-muted">Minimal 6 karakter jika diisi</small>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">No. Telepon</label>
+                                <input type="text" name="phone" class="form-control" 
+                                       value="{{ user.phone if user else '' }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">NIK</label>
+                                <input type="text" name="nik" class="form-control" 
+                                       value="{{ user.nik if user else '' }}">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Alamat</label>
+                                <textarea name="address" class="form-control" rows="2">{{ user.address if user else '' }}</textarea>
+                            </div>
+                            
+                            {% if not user %}
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="is_admin" id="isAdmin">
+                                    <label class="form-check-label" for="isAdmin">
+                                        <span class="badge bg-warning">Jadikan Admin</span>
+                                    </label>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if not user %}
+                            <!-- Signature Pad (hanya saat tambah user baru) -->
+                            <div class="col-12 mt-3">
+                                <label class="form-label fw-semibold">✍️ Tanda Tangan</label>
+                                <div class="border rounded p-2" style="background:#1a1a2e; max-width:400px;">
+                                    <canvas id="signaturePad"
+                                            width="370" height="150"
+                                            style="background:#fff; border-radius:4px; display:block; cursor:crosshair; touch-action:none;"></canvas>
+                                    <div class="mt-2 d-flex gap-2">
+                                        <button type="button" class="btn btn-sm btn-outline-danger" id="clearSignature">
+                                            <i class="bi bi-eraser me-1"></i>Hapus
+                                        </button>
+                                        <small class="text-muted my-auto">Tanda tangan di atas kotak putih</small>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="signature" id="signatureData">
+                            </div>
+                            {% endif %}
+
+                            <div class="col-12 mt-4">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-{% if user %}save{% else %}plus-circle{% endif %} me-1"></i>
+                                    {% if user %}Simpan Perubahan{% else %}Tambah User{% endif %}
+                                </button>
+                                <a href="{{ url_for('admin.users') }}" class="btn btn-secondary ms-2">Batal</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if not user %}
+<script>
+(function() {
+    const canvas = document.getElementById('signaturePad');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let drawing = false;
+    let lastX = 0, lastY = 0;
+
+    function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const src = e.touches ? e.touches[0] : e;
+        return [src.clientX - rect.left, src.clientY - rect.top];
+    }
+
+    function startDraw(e) { e.preventDefault(); drawing = true; [lastX, lastY] = getPos(e); }
+    function endDraw() { drawing = false; saveData(); }
+    function draw(e) {
+        if (!drawing) return;
+        e.preventDefault();
+        const [x, y] = getPos(e);
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(x, y);
+        ctx.strokeStyle = '#1a1a2e';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+        [lastX, lastY] = [x, y];
+        saveData();
+    }
+
+    function saveData() {
+        document.getElementById('signatureData').value = canvas.toDataURL('image/png');
+    }
+
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mouseup', endDraw);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('touchstart', startDraw, { passive: false });
+    canvas.addEventListener('touchend', endDraw);
+    canvas.addEventListener('touchmove', draw, { passive: false });
+
+    document.getElementById('clearSignature').addEventListener('click', function() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        document.getElementById('signatureData').value = '';
+    });
+})();
+</script>
+{% endif %}
+{% endblock %}

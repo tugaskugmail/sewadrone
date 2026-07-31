@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+{% extends "base.html" %}
+
+{% block title %}Berita Acara Serah Terima - Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('admin.bookings') }}">Bookings</a></li>
+            <li class="breadcrumb-item active">BAST Serah Terima</li>
+        </ol>
+    </nav>
+
+    <div class="card bg-dark border-primary mb-4">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">📋 Berita Acara Serah Terima Drone</h4>
+            <small>Booking #{{ booking.id }} - {{ booking.drone.name }}</small>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                <!-- Info Penyewa -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="text-warning mb-3">👤 Data Penyewa</h6>
+                        <table class="table table-dark table-sm">
+                            <tr><td><strong>Nama</strong></td><td>{{ booking.user.full_name }}</td></tr>
+                            <tr><td><strong>NIK</strong></td><td>{{ booking.user.nik or '-' }}</td></tr>
+                            <tr><td><strong>HP</strong></td><td>{{ booking.user.phone or '-' }}</td></tr>
+                            <tr><td><strong>Alamat</strong></td><td>{{ booking.user.address or '-' }}</td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-warning mb-3">🚁 Data Drone</h6>
+                        <table class="table table-dark table-sm">
+                            <tr><td><strong>Drone</strong></td><td>{{ booking.drone.name }}</td></tr>
+                            <tr><td><strong>Merk</strong></td><td>{{ booking.drone.brand }}</td></tr>
+                            <tr><td><strong>No. Registrasi</strong></td><td>
+                                {% if booking.drone.registration_number %}
+                                <span class="text-success fw-semibold">{{ booking.drone.registration_number }}</span>
+                                {% else %}
+                                <span class="text-warning">Belum diisi</span>
+                                {% endif %}
+                            </td></tr>
+                            <tr><td><strong>Tanggal Sewa</strong></td><td>{{ booking.start_date }} s/d {{ booking.end_date }}</td></tr>
+                            <tr><td><strong>Total Biaya</strong></td><td>Rp {{ "{:,}".format(booking.total_price) }}</td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Serial Numbers -->
+                <div class="card bg-secondary mb-4">
+                    <div class="card-header">🔢 Serial Number Equipment
+                        {% if booking.drone.serial_drone or booking.drone.serial_remote %}
+                        <span class="badge bg-success ms-2">Auto-fill dari data drone</span>
+                        {% else %}
+                        <span class="badge bg-warning text-dark ms-2">Belum ada data serial drone</span>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-2">
+                                <label>Serial Drone</label>
+                                <input type="text" name="serial_drone" class="form-control" placeholder="SN-XXXX-XXXX"
+                                       value="{{ handover.serial_drone if handover and handover.serial_drone else booking.drone.serial_drone or '' }}">
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label>Serial Remote</label>
+                                <input type="text" name="serial_remote" class="form-control" placeholder="RC-XXXX-XXXX"
+                                       value="{{ handover.serial_remote if handover and handover.serial_remote else booking.drone.serial_remote or '' }}">
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label>Jam Keluar</label>
+                                <input type="time" name="handover_time_out" class="form-control" value="{{ handover.handover_time_out if handover and handover.handover_time_out else '' }}">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-2">
+                                <label>Battery 1</label>
+                                <input type="text" name="serial_battery_1" class="form-control"
+                                       value="{{ handover.serial_battery_1 if handover and handover.serial_battery_1 else booking.drone.serial_battery_1 or '' }}">
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label>Battery 2</label>
+                                <input type="text" name="serial_battery_2" class="form-control"
+                                       value="{{ handover.serial_battery_2 if handover and handover.serial_battery_2 else booking.drone.serial_battery_2 or '' }}">
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label>Battery 3</label>
+                                <input type="text" name="serial_battery_3" class="form-control"
+                                       value="{{ handover.serial_battery_3 if handover and handover.serial_battery_3 else booking.drone.serial_battery_3 or '' }}">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="mb-2">Status Pembayaran</label>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    {% for val, label, bg, txt in [('pending','⏳ Pending','#6c757d','#fff'),('dp','💰 DP 50%','#0d6efd','#fff'),('lunas','✓ Lunas','#198754','#fff')] %}
+                                    <div class="form-check form-check-inline m-0">
+                                        <input class="form-check-input visually-hidden" type="radio"
+                                               name="payment_status"
+                                               id="pay_{{ val }}"
+                                               value="{{ val }}"
+                                               {% if handover and handover.payment_status == val %}checked{% endif %}
+                                               onchange="this.closest('div.d-flex').querySelectorAll('label').forEach(l=>l.style.opacity='0.45'); this.nextElementSibling.style.opacity='1'">
+                                        <label for="pay_{{ val }}"
+                                               style="background:{{ bg }};color:{{ txt }};padding:4px 14px;border-radius:20px;font-size:0.85rem;font-weight:600;cursor:pointer;opacity:{% if handover and handover.payment_status == val %}1{% else %}0.55{% endif %};transition:opacity 0.15s;">
+                                            {{ label }}
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Checklist Kelengkapan -->
+                <div class="card bg-secondary mb-4">
+                    <div class="card-header">📦 Checklist Kelengkapan</div>
+                    <div class="card-body">
+                        <table class="table table-dark table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th style="width:80px">Qty</th>
+                                    <th>Kondisi</th>
+                                    <th>Catatan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% set items = [
+                                    ('drone_body', 'Drone Body'),
+                                    ('remote_controller', 'Remote Controller'),
+                                    ('battery', 'Battery'),
+                                    ('charger', 'Charger'),
+                                    ('usb_cable', 'USB Cable'),
+                                    ('nd_filter', 'ND Filter'),
+                                    ('sd_card', 'microSD Card'),
+                                    ('propeller', 'Propeller Cadangan'),
+                                    ('hardcase', 'Hardcase'),
+                                    ('manual', 'Buku Manual')
+                                ] %}
+                                {% for item_id, item_name in items %}
+                                <tr>
+                                    <td>{{ item_name }}</td>
+                                    <td><input type="number" name="eq_{{ item_id }}_qty" class="form-control form-control-sm" value="1" min="0"></td>
+                                    <td>
+                                        <div class="d-flex gap-2 flex-wrap">
+                                            {% for val, label, bg, txt in [('baik','✓ Baik','#198754','#fff'),('rusak','⚠ Rusak','#ffc107','#000'),('hilang','✗ Hilang','#dc3545','#fff')] %}
+                                            <div class="form-check form-check-inline m-0">
+                                                <input class="form-check-input visually-hidden" type="radio"
+                                                       name="eq_{{ item_id }}_condition"
+                                                       id="eq_{{ item_id }}_{{ val }}"
+                                                       value="{{ val }}"
+                                                       onchange="this.closest('div.d-flex').querySelectorAll('label').forEach(l=>l.style.opacity='0.45'); this.nextElementSibling.style.opacity='1'">
+                                                <label for="eq_{{ item_id }}_{{ val }}"
+                                                       style="background:{{ bg }};color:{{ txt }};padding:2px 10px;border-radius:20px;font-size:0.8rem;font-weight:600;cursor:pointer;opacity:0.55;transition:opacity 0.15s;border:2px solid transparent;">
+                                                    {{ label }}
+                                                </label>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </td>
+                                    <td><input type="text" name="eq_{{ item_id }}_notes" class="form-control form-control-sm" placeholder="Catatan..."></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Checklist Kondisi Drone -->
+                <div class="card bg-secondary mb-4">
+                    <div class="card-header">🔧 Pemeriksaan Kondisi Drone</div>
+                    <div class="card-body">
+                        <table class="table table-dark table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Item Pemeriksaan</th>
+                                    <th style="width:150px">Status</th>
+                                    <th>Catatan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% set cond_items = [
+                                    ('body_frame', 'Body/Frame Drone'),
+                                    ('gimbal_camera', 'Gimbal & Kamera'),
+                                    ('obstacle_sensor', 'Sensor Obstacle'),
+                                    ('motor_propeller', 'Motor & Propeller'),
+                                    ('remote_connection', 'Koneksi Remote'),
+                                    ('battery_condition', 'Kondisi Battery'),
+                                    ('ready_to_fly', 'Ready to Fly')
+                                ] %}
+                                {% for item_id, item_name in cond_items %}
+                                <tr>
+                                    <td>{{ item_name }}</td>
+                                    <td>
+                                        <div class="d-flex gap-2 flex-wrap">
+                                            {% for val, label, bg, txt in [('ok','✓ OK','#198754','#fff'),('warning','⚠ Warning','#ffc107','#000'),('error','✗ Error','#dc3545','#fff')] %}
+                                            <div class="form-check form-check-inline m-0">
+                                                <input class="form-check-input visually-hidden" type="radio"
+                                                       name="cond_{{ item_id }}"
+                                                       id="cond_{{ item_id }}_{{ val }}"
+                                                       value="{{ val }}"
+                                                       onchange="this.closest('div.d-flex').querySelectorAll('label').forEach(l=>l.style.opacity='0.45'); this.nextElementSibling.style.opacity='1'">
+                                                <label for="cond_{{ item_id }}_{{ val }}"
+                                                       style="background:{{ bg }};color:{{ txt }};padding:2px 10px;border-radius:20px;font-size:0.8rem;font-weight:600;cursor:pointer;opacity:0.55;transition:opacity 0.15s;border:2px solid transparent;">
+                                                    {{ label }}
+                                                </label>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </td>
+                                    <td><input type="text" name="cond_{{ item_id }}_notes" class="form-control form-control-sm" placeholder="Catatan..."></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Catatan & Dokumentasi -->
+                <div class="card bg-secondary mb-4">
+                    <div class="card-header">📝 Catatan & Dokumentasi</div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label>Catatan Kondisi / Kerusakan Awal</label>
+                            <textarea name="notes_damage" class="form-control" rows="3" placeholder="Catatan khusus jika ada kerusakan atau kondisi tertentu...">{{ handover.notes_damage if handover and handover.notes_damage else '' }}</textarea>
+                        </div>
+                        <!-- Upload Foto Galeri BAST -->
+                        {% from 'macros/photo_gallery.html' import photo_upload, photo_gallery_view %}
+                        {{ photo_upload('photo_out_file', '📷 Upload Foto Serah Terima (Bukti Kondisi)', handover.photo_out_urls if handover else None) }}
+                    </div>
+                </div>
+
+                <!-- Tanda Tangan -->
+                <div class="card bg-secondary mb-4">
+                    <div class="card-header">✍️ Tanda Tangan</div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">📅 Tanggal BAST</label>
+                                <input type="text" id="bastDate" class="form-control" readonly
+                                       style="background:#2a2a3e; color:#fff; border-color:#6c757d;">
+                            </div>
+                        </div>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Tanda Tangan Admin</label>
+                                <div class="border rounded p-2" style="background:#1a1a2e;">
+                                    <canvas id="adminSignaturePad" width="320" height="130"
+                                            style="background:#fff; border-radius:4px; display:block; cursor:crosshair; touch-action:none;"></canvas>
+                                    <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="clearAdminSig">
+                                        <i class="bi bi-eraser me-1"></i>Hapus
+                                    </button>
+                                </div>
+                                <input type="hidden" name="admin_signature" id="adminSigData"
+                                       value="{{ handover.admin_signature if handover and handover.admin_signature else '' }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Tanda Tangan Penyewa</label>
+                                <div class="border rounded p-2" style="background:#1a1a2e;">
+                                    <canvas id="userSignaturePad" width="320" height="130"
+                                            style="background:#fff; border-radius:4px; display:block; cursor:crosshair; touch-action:none;"></canvas>
+                                    <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="clearUserSig">
+                                        <i class="bi bi-eraser me-1"></i>Hapus
+                                    </button>
+                                </div>
+                                <input type="hidden" name="user_signature" id="userSigData"
+                                       value="{{ handover.user_signature if handover and handover.user_signature else '' }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tombol -->
+                <div class="d-flex gap-2 flex-wrap">
+                    <button type="submit" class="btn btn-success btn-lg">
+                        ✅ Simpan BAST & Aktifkan Booking
+                    </button>
+                    {% if handover %}
+                    <a href="{{ url_for('admin.bast_pdf', booking_id=booking.id) }}" target="_blank" class="btn btn-outline-light btn-lg">
+                        💾 Simpan PDF
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('admin.bookings') }}" class="btn btn-secondary btn-lg">Batal</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-fill tanggal
+document.getElementById('bastDate').value = new Date().toLocaleDateString('id-ID', {
+    day: '2-digit', month: 'long', year: 'numeric'
+});
+
+// Signature pad factory
+function makeSignaturePad(canvasId, hiddenId, clearBtnId, existingData) {
+    const canvas = document.getElementById(canvasId);
+    const hidden = document.getElementById(hiddenId);
+    const ctx = canvas.getContext('2d');
+    let drawing = false, lastX = 0, lastY = 0;
+
+    // Restore existing signature if present
+    if (existingData) {
+        const img = new Image();
+        img.onload = () => ctx.drawImage(img, 0, 0);
+        img.src = existingData;
+    }
+
+    function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const src = e.touches ? e.touches[0] : e;
+        return [src.clientX - rect.left, src.clientY - rect.top];
+    }
+    function startDraw(e) { e.preventDefault(); drawing = true; [lastX, lastY] = getPos(e); }
+    function endDraw() { drawing = false; hidden.value = canvas.toDataURL('image/png'); }
+    function draw(e) {
+        if (!drawing) return;
+        e.preventDefault();
+        const [x, y] = getPos(e);
+        ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(x, y);
+        ctx.strokeStyle = '#1a1a2e'; ctx.lineWidth = 2;
+        ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
+        [lastX, lastY] = [x, y];
+        hidden.value = canvas.toDataURL('image/png');
+    }
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mouseup', endDraw);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('touchstart', startDraw, { passive: false });
+    canvas.addEventListener('touchend', endDraw);
+    canvas.addEventListener('touchmove', draw, { passive: false });
+
+    document.getElementById(clearBtnId).addEventListener('click', function() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        hidden.value = '';
+    });
+}
+
+makeSignaturePad('adminSignaturePad', 'adminSigData', 'clearAdminSig',
+    document.getElementById('adminSigData').value || null);
+makeSignaturePad('userSignaturePad', 'userSigData', 'clearUserSig',
+    document.getElementById('userSigData').value || null);
+</script>
+{% endblock %}
