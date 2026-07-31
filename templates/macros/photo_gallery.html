@@ -128,21 +128,46 @@
 
 
 {% macro photo_gallery_view(urls_json, title='Galeri Foto') %}
-{# Read-only gallery display #}
+{# Read-only gallery display with Bootstrap modal lightbox #}
 {% if urls_json %}
 {% set urls = urls_json | from_json %}
 {% if urls %}
+{% set modal_id = 'modal_' ~ title|replace(' ', '_')|replace('📷', '')|replace('📸', '') ~ loop.index if loop is defined else 'modal_gallery' %}
 <div class="mt-2">
     <small class="fw-semibold text-muted d-block mb-1">📸 {{ title }} ({{ urls | length }} foto)</small>
     <div class="d-flex gap-2 flex-wrap">
         {% for url in urls %}
-        <a href="{{ url }}" target="_blank" title="Foto {{ loop.index }}">
+        {% set mid = 'lgModal_' ~ loop.index ~ '_' ~ url|replace('/','_')|replace('.','_') %}
+        <!-- Thumbnail -->
+        <div style="cursor:pointer;" data-bs-toggle="modal" data-bs-target="#{{ mid }}" title="Klik untuk zoom">
             <img src="{{ url }}" alt="Foto {{ loop.index }}"
                  style="width:80px;height:80px;object-fit:cover;border-radius:6px;border:2px solid #0d6efd;transition:transform 0.15s;"
                  onmouseover="this.style.transform='scale(1.1)'"
                  onmouseout="this.style.transform='scale(1)'"
                  onerror="this.parentElement.style.display='none'">
-        </a>
+        </div>
+        <!-- Modal Lightbox -->
+        <div class="modal fade" id="{{ mid }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content bg-dark">
+                    <div class="modal-header border-secondary py-2">
+                        <small class="text-muted">📷 {{ title }} — Foto {{ loop.index }}/{{ urls|length }}</small>
+                        <button type="button" class="btn-close btn-close-white btn-sm" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center p-2">
+                        <img src="{{ url }}" alt="Foto {{ loop.index }}"
+                             style="max-width:100%;max-height:75vh;border-radius:8px;"
+                             onerror="this.src='https://placehold.co/400x300/1a1a3e/fff?text=Foto+Tidak+Tersedia'">
+                    </div>
+                    <div class="modal-footer border-secondary py-2 justify-content-between">
+                        <a href="{{ url }}" target="_blank" class="btn btn-sm btn-outline-light">
+                            <i class="bi bi-download me-1"></i>Buka Asli
+                        </a>
+                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    </div>
+                </div>
+            </div>
+        </div>
         {% endfor %}
     </div>
 </div>
