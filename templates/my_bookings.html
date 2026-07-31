@@ -58,10 +58,10 @@
 
                     <!-- Galeri Foto BAST (jika ada) -->
                     {% from 'macros/photo_gallery.html' import photo_gallery_view %}
-                    {% if booking.handover_record %}
+                    {% if booking.handover_record and booking.handover_record.photo_out_urls %}
                     {{ photo_gallery_view(booking.handover_record.photo_out_urls, '📷 Foto Serah Terima') }}
                     {% endif %}
-                    {% if booking.return_record %}
+                    {% if booking.status == 'completed' and booking.return_record and booking.return_record.photo_return_urls %}
                     {{ photo_gallery_view(booking.return_record.photo_return_urls, '📷 Foto Pengembalian') }}
                     {% endif %}
 
