@@ -18,7 +18,7 @@
             <small>Booking #{{ booking.id }} - {{ booking.drone.name }}</small>
         </div>
         <div class="card-body">
-            <form method="POST">
+            <form method="POST" enctype="multipart/form-data">
                 <!-- Info Penyewa -->
                 <div class="row mb-4">
                     <div class="col-md-6">
@@ -29,6 +29,10 @@
                             <tr><td><strong>HP</strong></td><td>{{ booking.user.phone or '-' }}</td></tr>
                             <tr><td><strong>Alamat</strong></td><td>{{ booking.user.address or '-' }}</td></tr>
                         </table>
+                        {% if handover and handover.photo_out_urls %}
+                        {% from 'macros/photo_gallery.html' import photo_gallery_view %}
+                        {{ photo_gallery_view(handover.photo_out_urls, '📷 Foto Serah Terima') }}
+                        {% endif %}
                     </div>
                     <div class="col-md-6">
                         <h6 class="text-warning mb-3">🚁 Data Drone</h6>

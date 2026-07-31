@@ -27,6 +27,10 @@
                             <tr><td><strong>Nama</strong></td><td>{{ booking.user.full_name }}</td></tr>
                             <tr><td><strong>HP</strong></td><td>{{ booking.user.phone or '-' }}</td></tr>
                         </table>
+                        {% if return_record and return_record.photo_return_urls %}
+                        {% from 'macros/photo_gallery.html' import photo_gallery_view %}
+                        {{ photo_gallery_view(return_record.photo_return_urls, '📷 Foto Pengembalian') }}
+                        {% endif %}
                     </div>
                     <div class="col-md-6">
                         <h6 class="text-warning mb-3">🚁 Data Sewa</h6>
@@ -35,6 +39,8 @@
                             <tr><td><strong>Tanggal Sewa</strong></td><td>{{ booking.start_date }} s/d {{ booking.end_date }}</td></tr>
                             <tr><td><strong>Total Biaya</strong></td><td>Rp {{ "{:,}".format(booking.total_price) }}</td></tr>
                         </table>
+                        {% from 'macros/photo_gallery.html' import photo_upload %}
+                        {{ photo_upload('photo_return_file', '📷 Upload Foto Pengembalian (Bukti Kondisi)', return_record.photo_return_urls if return_record else None) }}
                     </div>
                 </div>
 
@@ -194,9 +200,8 @@
                             </label>
                         </div>
 
-                        <!-- Upload Foto Galeri Pengembalian -->
-                        {% from 'macros/photo_gallery.html' import photo_upload %}
-                        {{ photo_upload('photo_return_file', '📷 Upload Foto Pengembalian (Bukti Kondisi)', return_record.photo_return_urls if return_record else None) }}
+                        <!-- Upload Foto sudah dipindah ke section atas (Data Penyewa) -->
+
                     </div>
                 </div>
 
