@@ -190,8 +190,8 @@ def accept_handover(booking_id):
     booking.status = 'active'
     db.session.commit()
     
-    flash('Drone berhasil diterima! Selamat menggunakan.', 'success')
-    return redirect(url_for('main.my_bookings'))
+    flash('Drone berhasil diterima! Berikut Berita Acara Serah Terima.', 'success')
+    return redirect(url_for('main.view_handover', booking_id=booking_id))
 
 
 @main_bp.route('/booking/<int:booking_id>/handover')
