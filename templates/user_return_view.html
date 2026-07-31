@@ -146,12 +146,23 @@
                 <div class="col-md-4">
                     <div class="card bg-secondary">
                         <div class="card-body text-center">
-                            <h5>✅ Status</h5>
-                            <span class="badge bg-success">Selesai</span>
+                            <h5>📷 Foto</h5>
+                            <span class="badge bg-info">{{ 'Terlampir' if return_record.photo_return_attached else 'Tidak' }}</span>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Foto Dokumentasi Pengembalian -->
+            {% from 'macros/photo_gallery.html' import photo_gallery_view %}
+            {% if return_record.photo_return_urls %}
+            <div class="card bg-secondary mb-4">
+                <div class="card-header">📷 Foto Dokumentasi Pengembalian</div>
+                <div class="card-body">
+                    {{ photo_gallery_view(return_record.photo_return_urls, 'Foto Kondisi Drone Saat Kembali') }}
+                </div>
+            </div>
+            {% endif %}
 
             <!-- Status Completed -->
             {% if booking.status == 'completed' %}

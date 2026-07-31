@@ -129,10 +129,20 @@
             </div>
             {% endif %}
 
-            <!-- Foto -->
-            <div class="mb-4">
-                <span class="badge bg-info">📷 Foto Saat Keluar: {{ 'Terlampir' if handover.photo_out_attached else 'Tidak' }}</span>
+            <!-- Foto Dokumentasi -->
+            {% from 'macros/photo_gallery.html' import photo_gallery_view %}
+            {% if handover.photo_out_urls %}
+            <div class="card bg-secondary mb-4">
+                <div class="card-header">📷 Foto Dokumentasi Serah Terima</div>
+                <div class="card-body">
+                    {{ photo_gallery_view(handover.photo_out_urls, 'Foto Kondisi Drone Saat Keluar') }}
+                </div>
             </div>
+            {% else %}
+            <div class="mb-4">
+                <span class="badge bg-secondary">📷 Foto Saat Keluar: {{ 'Terlampir' if handover.photo_out_attached else 'Tidak Ada' }}</span>
+            </div>
+            {% endif %}
 
             <!-- Tombol Terima -->
             {% if booking.status == 'confirmed' %}
