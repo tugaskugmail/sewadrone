@@ -664,6 +664,7 @@ def handover_create(booking_id):
             existing.document_number = doc_number
             if admin_signature: existing.admin_signature = admin_signature
             if user_signature:  existing.user_signature  = user_signature
+            existing.is_completed = True
         else:
             # Create new
             handover = HandoverRecord(
