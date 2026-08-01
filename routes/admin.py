@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file, current_app
 from flask_login import login_required, current_user
+from extensions import csrf
 from datetime import date, datetime
 from extensions import db
 from models import User, Drone, Booking, HandoverRecord, ReturnRecord
@@ -488,6 +489,7 @@ def booking_update_status(booking_id):
 # ============================================================
 
 @admin_bp.route('/bookings/<int:booking_id>/upload-photo', methods=['POST'])
+@csrf.exempt
 @login_required
 def upload_bast_photo(booking_id):
     """AJAX: Upload foto BAST (handover atau return) dan simpan ke DB langsung."""
