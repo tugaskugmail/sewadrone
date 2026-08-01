@@ -513,20 +513,37 @@ def upload_bast_photo(booking_id):
     if not uploaded:
         return json.dumps({'ok': False, 'error': 'Tidak ada file valid'}), 400
 
-    # Merge ke DB record yang ada
+    # Merge ke DB record yang ada, atau buat record sementara kalau belum ada
     if photo_type == 'handover':
         rec = HandoverRecord.query.filter_by(booking_id=booking_id).first()
         if rec:
             existing = json.loads(rec.photo_out_urls) if rec.photo_out_urls else []
             rec.photo_out_urls = json.dumps(existing + uploaded)
             rec.photo_out_attached = True
-        # Kalau belum ada record, simpan di session (akan disimpan saat form di-submit)
+        else:
+            # Buat record sementara — form belum disubmit tapi foto sudah diupload
+            rec = HandoverRecord(
+                booking_id=booking_id,
+                photo_out_urls=json.dumps(uploaded),
+                photo_out_attached=True,
+                is_completed=False
+            )
+            db.session.add(rec)
     else:
         rec = ReturnRecord.query.filter_by(booking_id=booking_id).first()
         if rec:
             existing = json.loads(rec.photo_return_urls) if rec.photo_return_urls else []
             rec.photo_return_urls = json.dumps(existing + uploaded)
             rec.photo_return_attached = True
+        else:
+            # Buat record sementara untuk return juga
+            rec = ReturnRecord(
+                booking_id=booking_id,
+                photo_return_urls=json.dumps(uploaded),
+                photo_return_attached=True,
+                is_completed=False
+            )
+            db.session.add(rec)
 
     db.session.commit()
     return json.dumps({'ok': True, 'urls': uploaded}), 200, {'Content-Type': 'application/json'}
