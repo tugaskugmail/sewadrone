@@ -596,6 +596,8 @@ def handover_create(booking_id):
         photo_out_attached = request.form.get('photo_out_attached') == 'on'
 
         # Handle upload multiple foto BAST keluar
+        # Prioritas: ambil foto yang sudah di-AJAX-upload ke DB, merge dengan upload form baru
+        ajax_urls = json.loads(existing.photo_out_urls) if existing and existing.photo_out_urls else []
         photo_out_urls = None
         if 'photo_out_file' in request.files:
             files = request.files.getlist('photo_out_file')
@@ -610,12 +612,14 @@ def handover_create(booking_id):
                         os.makedirs(fpath, exist_ok=True)
                         file.save(os.path.join(fpath, fname))
                         uploaded.append(f"/static/uploads/handover/{fname}")
-            if uploaded:
-                # Merge dengan foto yang sudah ada
-                existing_urls = json.loads(existing.photo_out_urls) if existing and existing.photo_out_urls else []
-                all_urls = existing_urls + uploaded
+            all_urls = ajax_urls + uploaded
+            if all_urls:
                 photo_out_urls = json.dumps(all_urls)
                 photo_out_attached = True
+        elif ajax_urls:
+            # Tidak ada upload form baru tapi ada foto dari AJAX — pakai itu
+            photo_out_urls = json.dumps(ajax_urls)
+            photo_out_attached = True
         # Signature otomatis dari database (tidak perlu tanda tangan manual)
         # Checkbox persetujuan menampilkan tanda tangan yang tersimpan
         admin_signature = current_user.signature if request.form.get('admin_approve') == '1' else None
@@ -738,7 +742,9 @@ def return_create(booking_id):
         user_signature  = booking.user.signature if request.form.get('user_approve') == '1' else None
 
         # Handle upload foto pengembalian
-        photo_return_url = None
+        # Prioritas: ambil foto yang sudah di-AJAX-upload ke DB, merge dengan upload form baru
+        ajax_return_urls = json.loads(existing.photo_return_urls) if existing and existing.photo_return_urls else []
+        photo_return_urls = None
         if 'photo_return_file' in request.files:
             files = request.files.getlist('photo_return_file')
             uploaded = []
@@ -752,9 +758,13 @@ def return_create(booking_id):
                         os.makedirs(fpath, exist_ok=True)
                         file.save(os.path.join(fpath, fname))
                         uploaded.append(f"/static/uploads/returns/{fname}")
-            if uploaded:
-                photo_return_url = ','.join(uploaded)
+            all_return_urls = ajax_return_urls + uploaded
+            if all_return_urls:
+                photo_return_urls = json.dumps(all_return_urls)
                 photo_return_attached = True
+        elif ajax_return_urls:
+            photo_return_urls = json.dumps(ajax_return_urls)
+            photo_return_attached = True
         
         if existing:
             existing.return_time_in = return_time_in
@@ -766,12 +776,8 @@ def return_create(booking_id):
             existing.deposit_returned = deposit_returned
             existing.deposit_deducted = deposit_deducted
             existing.photo_return_attached = photo_return_attached
-            if photo_return_url:
-                existing.photo_return_url = photo_return_url
-                # Merge foto baru ke JSON array
-                existing_urls = json.loads(existing.photo_return_urls) if existing.photo_return_urls else []
-                new_urls = photo_return_url.split(',') if photo_return_url else []
-                existing.photo_return_urls = json.dumps(existing_urls + new_urls)
+            if photo_return_urls:
+                existing.photo_return_urls = photo_return_urls
             if admin_signature: existing.admin_signature = admin_signature
             if user_signature:  existing.user_signature  = user_signature
             existing.is_completed = True
@@ -787,6 +793,7 @@ def return_create(booking_id):
                 deposit_returned=deposit_returned,
                 deposit_deducted=deposit_deducted,
                 photo_return_attached=photo_return_attached,
+                photo_return_urls=photo_return_urls,
                 admin_signature=admin_signature,
                 user_signature=user_signature,
                 is_completed=True
