@@ -232,9 +232,127 @@
                             <label>Catatan Kondisi / Kerusakan Awal</label>
                             <textarea name="notes_damage" class="form-control" rows="3" placeholder="Catatan khusus jika ada kerusakan atau kondisi tertentu...">{{ handover.notes_damage if handover and handover.notes_damage else '' }}</textarea>
                         </div>
-                        <!-- Upload Foto Galeri BAST -->
-                        {% from 'macros/photo_gallery.html' import photo_upload, photo_gallery_view %}
-                        {{ photo_upload('photo_out_file', '📷 Upload Foto Serah Terima (Bukti Kondisi)', handover.photo_out_urls if handover else None) }}
+                        <!-- Upload Foto BAST — AJAX Upload -->
+                        <div class="card bg-dark border-secondary mt-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span>📷 Foto Dokumentasi Serah Terima</span>
+                                <small class="text-muted">Pilih foto lalu klik Simpan Foto</small>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex gap-2 align-items-center mb-3">
+                                    <input type="file" id="photoInput" accept="image/*" multiple
+                                           class="form-control form-control-sm" style="max-width:300px;">
+                                    <button type="button" id="savePhotoBtn" class="btn btn-success btn-sm">
+                                        <i class="bi bi-cloud-upload me-1"></i>Simpan Foto
+                                    </button>
+                                    <span id="photoStatus" class="text-muted small"></span>
+                                </div>
+                                <div id="photoPreview" class="d-flex gap-2 flex-wrap mb-3"></div>
+                                <div id="savedGallery" class="d-flex gap-2 flex-wrap">
+                                    {% if handover and handover.photo_out_urls %}
+                                    {% set urls = handover.photo_out_urls | from_json %}
+                                    {% for url in urls %}
+                                    <div class="position-relative">
+                                        <img src="{{ url }}" data-full="{{ url }}" class="gallery-thumb"
+                                             style="width:90px;height:90px;object-fit:cover;border-radius:8px;border:2px solid #198754;cursor:pointer;"
+                                             onerror="this.parentElement.remove()">
+                                        <span class="position-absolute top-0 start-0 badge bg-success opacity-75" style="font-size:0.6rem;">✓</span>
+                                    </div>
+                                    {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal fade" id="bastLightbox" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                                <div class="modal-content bg-dark">
+                                    <div class="modal-header border-secondary py-2">
+                                        <small class="text-muted">📷 Foto Dokumentasi</small>
+                                        <button type="button" class="btn-close btn-close-white btn-sm" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body text-center p-2">
+                                        <img id="bastLightboxImg" src="" style="max-width:100%;max-height:75vh;border-radius:8px;">
+                                    </div>
+                                    <div class="modal-footer border-secondary py-2 justify-content-between">
+                                        <a id="bastLightboxLink" href="#" target="_blank" class="btn btn-sm btn-outline-light">
+                                            <i class="bi bi-download me-1"></i>Buka Asli
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <script>
+                        (function(){
+                            var inp = document.getElementById('photoInput');
+                            var prev = document.getElementById('photoPreview');
+                            var gallery = document.getElementById('savedGallery');
+                            var btn = document.getElementById('savePhotoBtn');
+                            var status = document.getElementById('photoStatus');
+                            var bookingId = {{ booking.id }};
+                            inp.addEventListener('change', function() {
+                                prev.innerHTML = '';
+                                status.textContent = inp.files.length + ' foto dipilih, klik Simpan Foto';
+                                Array.from(inp.files).forEach(function(f) {
+                                    var reader = new FileReader();
+                                    reader.onload = function(ev) {
+                                        var wrap = document.createElement('div');
+                                        wrap.className = 'position-relative';
+                                        var img = document.createElement('img');
+                                        img.src = ev.target.result;
+                                        img.style.cssText = 'width:90px;height:90px;object-fit:cover;border-radius:8px;border:2px dashed #ffc107;';
+                                        var lbl = document.createElement('span');
+                                        lbl.className = 'position-absolute bottom-0 start-0 badge bg-warning text-dark';
+                                        lbl.style.fontSize = '0.55rem';
+                                        lbl.textContent = 'Belum tersimpan';
+                                        wrap.appendChild(img); wrap.appendChild(lbl);
+                                        prev.appendChild(wrap);
+                                    };
+                                    reader.readAsDataURL(f);
+                                });
+                            });
+                            btn.addEventListener('click', function() {
+                                if (!inp.files.length) { status.textContent = '⚠️ Pilih foto dulu!'; return; }
+                                btn.disabled = true;
+                                status.textContent = '⏳ Menyimpan...';
+                                var fd = new FormData();
+                                Array.from(inp.files).forEach(function(f) { fd.append('photos', f); });
+                                fd.append('photo_type', 'handover');
+                                fetch('/admin/bookings/' + bookingId + '/upload-photo', {
+                                    method: 'POST', body: fd
+                                })
+                                .then(function(r) { return r.json(); })
+                                .then(function(data) {
+                                    if (data.ok) {
+                                        data.urls.forEach(function(url) {
+                                            var wrap = document.createElement('div');
+                                            wrap.className = 'position-relative';
+                                            var img = document.createElement('img');
+                                            img.src = url; img.dataset.full = url;
+                                            img.className = 'gallery-thumb';
+                                            img.style.cssText = 'width:90px;height:90px;object-fit:cover;border-radius:8px;border:2px solid #198754;cursor:pointer;';
+                                            var lbl = document.createElement('span');
+                                            lbl.className = 'position-absolute top-0 start-0 badge bg-success opacity-75';
+                                            lbl.style.fontSize = '0.6rem'; lbl.textContent = '✓';
+                                            wrap.appendChild(img); wrap.appendChild(lbl);
+                                            gallery.appendChild(wrap);
+                                        });
+                                        prev.innerHTML = ''; inp.value = '';
+                                        status.textContent = '✅ ' + data.urls.length + ' foto tersimpan!';
+                                    } else { status.textContent = '❌ ' + (data.error || 'Gagal'); }
+                                    btn.disabled = false;
+                                })
+                                .catch(function(e) { status.textContent = '❌ ' + e; btn.disabled = false; });
+                            });
+                            document.addEventListener('click', function(e) {
+                                var t = e.target.closest('.gallery-thumb');
+                                if (!t) return;
+                                document.getElementById('bastLightboxImg').src = t.dataset.full;
+                                document.getElementById('bastLightboxLink').href = t.dataset.full;
+                                bootstrap.Modal.getOrCreateInstance(document.getElementById('bastLightbox')).show();
+                            });
+                        })();
+                        </script>
                     </div>
                 </div>
 

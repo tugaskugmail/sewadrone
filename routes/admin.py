@@ -487,6 +487,49 @@ def booking_update_status(booking_id):
 # BERITA ACARA - SERAH TERIMA DRONE
 # ============================================================
 
+@admin_bp.route('/bookings/<int:booking_id>/upload-photo', methods=['POST'])
+@login_required
+def upload_bast_photo(booking_id):
+    """AJAX: Upload foto BAST (handover atau return) dan simpan ke DB langsung."""
+    booking = Booking.query.get_or_404(booking_id)
+    photo_type = request.form.get('photo_type', 'handover')  # 'handover' or 'return'
+
+    uploaded = []
+    files = request.files.getlist('photos')
+    for file in files:
+        if file and file.filename:
+            ext = file.filename.rsplit('.', 1)[-1].lower()
+            if ext in {'jpg', 'jpeg', 'png', 'webp'}:
+                import uuid as _uuid
+                fname = f"{photo_type}_{_uuid.uuid4().hex}.{ext}"
+                folder = 'handover' if photo_type == 'handover' else 'returns'
+                fpath = os.path.join(current_app.root_path, 'static', 'uploads', folder)
+                os.makedirs(fpath, exist_ok=True)
+                file.save(os.path.join(fpath, fname))
+                uploaded.append(f"/static/uploads/{folder}/{fname}")
+
+    if not uploaded:
+        return json.dumps({'ok': False, 'error': 'Tidak ada file valid'}), 400
+
+    # Merge ke DB record yang ada
+    if photo_type == 'handover':
+        rec = HandoverRecord.query.filter_by(booking_id=booking_id).first()
+        if rec:
+            existing = json.loads(rec.photo_out_urls) if rec.photo_out_urls else []
+            rec.photo_out_urls = json.dumps(existing + uploaded)
+            rec.photo_out_attached = True
+        # Kalau belum ada record, simpan di session (akan disimpan saat form di-submit)
+    else:
+        rec = ReturnRecord.query.filter_by(booking_id=booking_id).first()
+        if rec:
+            existing = json.loads(rec.photo_return_urls) if rec.photo_return_urls else []
+            rec.photo_return_urls = json.dumps(existing + uploaded)
+            rec.photo_return_attached = True
+
+    db.session.commit()
+    return json.dumps({'ok': True, 'urls': uploaded}), 200, {'Content-Type': 'application/json'}
+
+
 @admin_bp.route('/bookings/<int:booking_id>/handover', methods=['GET', 'POST'])
 def handover_create(booking_id):
     """Form Berita Acara Serah Terima (Admin -> User)"""
